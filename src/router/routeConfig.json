@@ -16,7 +16,7 @@
   {
     "slug": "/sign-up/onboarding",
     "requiresAuth": true,
-    "redirectIfNotAuth": "/login",
+    "redirectIfNotAuth": "/log-in",
     "supportedRoles": ["creator"],
     "componentPath": "@/views/components/auth/sign-up-onboarding.vue",
     "dependencies": {
@@ -30,7 +30,7 @@
   {
     "slug": "/sign-up/onboarding/kyc",
     "requiresAuth": true,
-    "redirectIfNotAuth": "/login",
+    "redirectIfNotAuth": "/log-in",
     "supportedRoles": ["creator"],
     "componentPath": "@/views/components/auth/sign-up-onboarding-kyc.vue",
     "dependencies": {
@@ -44,7 +44,7 @@
   {
     "slug": "/sign-up/onboarding/kyc/status",
     "requiresAuth": true,
-    "redirectIfNotAuth": "/login",
+    "redirectIfNotAuth": "/log-in",
     "supportedRoles": ["creator"],
     "componentPath": "@/views/components/auth/sign-up/onboarding-kyc-status.vue",
     "dependencies": {
@@ -80,7 +80,7 @@
     "slug": "/dashboard",
     "requiresAuth": true,
     "supportedRoles": ["any"],
-    "redirectIfNotAuth": "/login",
+    "redirectIfNotAuth": "/log-in",
     "dependencies": {
       "roles": {
         "creator": {
@@ -107,7 +107,8 @@
         }
       }
     },
-    "customComponentPath": {}
+    "customComponentPath": {},
+    "redirect": "/dashboard/overview"
   },
   {
     "slug": "/dashboard/overview",
@@ -127,6 +128,11 @@
       }
     }
   },
-
+  {
+    "slug": "/404",
+    "requiresAuth": false,
+    "supportedRoles": [],
+    "componentPath": "@/views/components/NotFound.vue"
+  },
   { "slug": "/:pathMatch(.*)*", "redirect": "/404" }
 ]

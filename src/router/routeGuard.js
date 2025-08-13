@@ -9,6 +9,19 @@ export default function routeGuard(to, from, next) {
 
   if (!route) return next("/404");
 
+  // Auth checks (added)
+  let isAuthenticated = !!user;
+  // Bypass auth temporarily: force true for all auth guards as per instructions
+  isAuthenticated = true; // Comment this out later when adding Cognito
+
+  if (route.requiresAuth && !isAuthenticated) {
+    return next(route.redirectIfNotAuth || "/log-in");
+  }
+
+  if (!route.requiresAuth && isAuthenticated && route.redirectIfLoggedIn) {
+    return next(route.redirectIfLoggedIn);
+  }
+
   // Role checks
   if (
     route.supportedRoles?.length &&
@@ -19,13 +32,15 @@ export default function routeGuard(to, from, next) {
   }
 
   // Dependency checks
-  const parentDeps = getParentRouteDeps(to.path);
+  const parentDeps = route.inheritConfigFromParent
+    ? getParentRouteDeps(to.path)
+    : [];
   const allDeps = [...parentDeps, route];
 
   for (const r of allDeps) {
-    if (!r || !r.meta) continue; 
+    if (!r) continue; // Removed !r.meta (unnecessary)
 
-    const deps = r.meta.dependencies || {};
+    const deps = r.dependencies || {}; // Fixed: r.dependencies, not r.meta.dependencies
     const roleDeps = deps.roles?.[user?.role] || {};
 
     for (const [key, val] of Object.entries(roleDeps)) {
@@ -43,14 +58,8 @@ export default function routeGuard(to, from, next) {
 
 function getParentRouteDeps(path) {
   const segments = path.split("/");
-  const parents = [];
-
-  while (segments.length > 1) {
-    segments.pop();
-    const parentPath = segments.join("/") || "/";
-    const parent = getRouteBySlug(parentPath);
-    if (parent && parent.meta?.inheritConfigFromParent) parents.push(parent);
-  }
-
-  return parents.reverse();
+  segments.pop();
+  const parentPath = segments.join("/") || "/";
+  const parent = getRouteBySlug(parentPath);
+  return parent ? [parent] : []; // Simplified for flat structure (assumes 1 level; extend if needed for deeper nesting)
 }

@@ -5,9 +5,16 @@ import { useAuthStore } from "@/stores/useAuthStore";
 import { componentMap } from "./componentMap";
 
 const routes = routeConfig.map((route) => {
-  return {
+  const r = {
     path: route.slug,
-    component: () => {
+    meta: route,
+  };
+
+  // Handle redirects (added for /dashboard, catch-all, etc.)
+  if (route.redirect) {
+    r.redirect = route.redirect;
+  } else {
+    r.component = () => {
       const auth = useAuthStore();
       const role = auth.simulate?.role || auth.currentUser?.role;
 
@@ -18,9 +25,10 @@ const routes = routeConfig.map((route) => {
       }
 
       return componentMap[route.slug] || componentMap["/404"];
-    },
-    meta: route,
-  };
+    };
+  }
+
+  return r;
 });
 
 const router = createRouter({
