@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+/* If you need custom configuration (e.g., themes, breakpoints, colors), add it here with @theme. 
+   No separate config file is required. Example: */
+@theme {
+  /* Custom font */
+  --font-family-display: "Inter", sans-serif;
+  
+  /* Custom breakpoint */
+  --breakpoint-3xl: 1920px;
+  
+  /* Custom color */
+  --color-primary: oklch(0.5 0.2 240);
+}
