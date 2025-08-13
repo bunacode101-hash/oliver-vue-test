@@ -1,10 +1,16 @@
-<script setup></script>
+<script setup>
+import { useAuthStore } from "@/stores/useAuthStore";
+const auth = useAuthStore();
+
+// Simulate a Creator user for testing fallbacks
+auth.simulateRole("creator", {
+  onboardingPassed: false,
+  kycPassed: true,
+});
+</script>
 
 <template>
-  <h1 >You did it!</h1>
-  <p class="text-2xl text-blue-950">
-    start here
-  </p>
+  <router-view />
 </template>
 
 <style scoped></style>

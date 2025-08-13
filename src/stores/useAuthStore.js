@@ -1,11 +1,11 @@
-import { defineStore } from 'pinia';
-import { jwtDecode } from 'jwt-decode';
+import { defineStore } from "pinia";
+import { jwtDecode } from "jwt-decode";
 
-export const useAuthStore = defineStore('auth', {
+export const useAuthStore = defineStore("auth", {
   state: () => ({
     idToken: null,
     currentUser: null,
-    simulate: null
+    simulate: null,
   }),
   actions: {
     setTokenAndDecode(idToken) {
@@ -13,15 +13,15 @@ export const useAuthStore = defineStore('auth', {
       const decoded = jwtDecode(idToken);
       this.currentUser = {
         email: decoded.email,
-        role: decoded['custom:role'],
-        kycPassed: decoded['custom:kycPassed'] === 'true',
-        onboardingPassed: decoded['custom:onboardingPassed'] === 'true',
-        awsDataCheck: decoded['custom:awsDataCheck'] === 'true',
-        raw: decoded
+        role: decoded["custom:role"],
+        kycPassed: decoded["custom:kycPassed"] === "true",
+        onboardingPassed: decoded["custom:onboardingPassed"] === "true",
+        awsDataCheck: decoded["custom:awsDataCheck"] === "true",
+        raw: decoded,
       };
     },
     refreshFromStorage() {
-      const token = localStorage.getItem('idToken');
+      const token = localStorage.getItem("idToken");
       if (token) this.setTokenAndDecode(token);
     },
     simulateRole(role, overrides = {}) {
@@ -33,7 +33,7 @@ export const useAuthStore = defineStore('auth', {
     logout() {
       localStorage.clear();
       this.$reset();
-    }
+    },
   },
-  persist: true
+  persist: true,
 });
