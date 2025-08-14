@@ -38,9 +38,9 @@ export default function routeGuard(to, from, next) {
   const allDeps = [...parentDeps, route];
 
   for (const r of allDeps) {
-    if (!r) continue; // Removed !r.meta (unnecessary)
+    if (!r) continue;
 
-    const deps = r.dependencies || {}; // Fixed: r.dependencies, not r.meta.dependencies
+    const deps = r.dependencies || {};
     const roleDeps = deps.roles?.[user?.role] || {};
 
     for (const [key, val] of Object.entries(roleDeps)) {
@@ -61,5 +61,5 @@ function getParentRouteDeps(path) {
   segments.pop();
   const parentPath = segments.join("/") || "/";
   const parent = getRouteBySlug(parentPath);
-  return parent ? [parent] : []; // Simplified for flat structure (assumes 1 level; extend if needed for deeper nesting)
+  return parent ? [parent] : [];
 }

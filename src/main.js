@@ -13,4 +13,8 @@ pinia.use(piniaPluginPersistedstate);
 app.use(pinia);
 app.use(router);
 
+if (import.meta.env?.MODE === "eager") {
+  await import("./eager");
+}
+
 app.mount("#app");

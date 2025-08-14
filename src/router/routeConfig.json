@@ -1,24 +1,30 @@
 [
   {
     "slug": "/log-in",
+    "section": "auth",
     "requiresAuth": false,
     "redirectIfLoggedIn": "/dashboard",
     "supportedRoles": [],
-    "componentPath": "@/components/auth/log-in.vue"
+    "componentPath": "@/components/auth/log-in.vue",
+    "preLoadSections": ["dashboard"]
   },
   {
     "slug": "/sign-up",
+    "section": "auth",
     "requiresAuth": false,
     "redirectIfLoggedIn": "/dashboard",
     "supportedRoles": [],
-    "componentPath": "@/components/auth/sign-up.vue"
+    "componentPath": "@/components/auth/sign-up.vue",
+    "preLoadSections": ["dashboard"]
   },
   {
     "slug": "/sign-up/onboarding",
+    "section": "auth",
     "requiresAuth": true,
     "redirectIfNotAuth": "/log-in",
     "supportedRoles": ["creator"],
     "componentPath": "@/components/auth/sign-up-onboarding.vue",
+    "preLoadSections": ["dashboard"],
     "dependencies": {
       "roles": {
         "creator": {
@@ -29,10 +35,12 @@
   },
   {
     "slug": "/sign-up/onboarding/kyc",
+    "section": "auth",
     "requiresAuth": true,
     "redirectIfNotAuth": "/log-in",
     "supportedRoles": ["creator"],
     "componentPath": "@/components/auth/sign-up-onboarding-kyc.vue",
+    "preLoadSections": ["dashboard"],
     "dependencies": {
       "roles": {
         "creator": {
@@ -43,10 +51,12 @@
   },
   {
     "slug": "/sign-up/onboarding/kyc/status",
+    "section": "auth",
     "requiresAuth": true,
     "redirectIfNotAuth": "/log-in",
     "supportedRoles": ["creator"],
     "componentPath": "@/components/auth/sign-up/onboarding-kyc-status.vue",
+    "preLoadSections": ["dashboard"],
     "dependencies": {
       "roles": {
         "creator": {
@@ -57,27 +67,34 @@
   },
   {
     "slug": "/lost-password",
+    "section": "auth",
     "redirectIfLoggedIn": "/dashboard",
     "requiresAuth": false,
     "supportedRoles": [],
-    "componentPath": "@/components/auth/lost-password.vue"
+    "componentPath": "@/components/auth/lost-password.vue",
+    "preLoadSections": []
   },
   {
     "slug": "/reset-password",
+    "section": "auth",
     "requiresAuth": false,
     "redirectIfLoggedIn": "/dashboard",
     "supportedRoles": [],
-    "componentPath": "@/components/auth/reset-password.vue"
+    "componentPath": "@/components/auth/reset-password.vue",
+    "preLoadSections": []
   },
   {
     "slug": "/confirm-email",
+    "section": "auth",
     "requiresAuth": false,
     "redirectIfLoggedIn": "/dashboard",
     "supportedRoles": [],
-    "componentPath": "@/components/auth/confirm-email.vue"
+    "componentPath": "@/components/auth/confirm-email.vue",
+    "preLoadSections": []
   },
   {
     "slug": "/dashboard",
+    "section": "dashboard",
     "requiresAuth": true,
     "supportedRoles": ["any"],
     "redirectIfNotAuth": "/log-in",
@@ -107,11 +124,12 @@
         }
       }
     },
-    "customComponentPath": {},
+    "preLoadSections": ["profile"],
     "redirect": "/dashboard/overview"
   },
   {
     "slug": "/dashboard/overview",
+    "section": "dashboard",
     "inheritConfigFromParent": true,
     "customComponentPath": {
       "creator": {
@@ -126,13 +144,40 @@
       "agent": {
         "componentPath": "@/components/dashboard/dashboardOverviewAgent.vue"
       }
-    }
+    },
+    "preLoadSections": []
+  },
+  {
+    "slug": "/profile",
+    "section": "profile",
+    "requiresAuth": true,
+    "supportedRoles": ["any"],
+    "componentPath": "@/components/profile/index.vue",
+    "preLoadSections": []
+  },
+  {
+    "slug": "/discover",
+    "section": "discover",
+    "requiresAuth": false,
+    "supportedRoles": [],
+    "componentPath": "@/components/discover/index.vue",
+    "preLoadSections": []
+  },
+  {
+    "slug": "/shop",
+    "section": "shop",
+    "requiresAuth": false,
+    "supportedRoles": [],
+    "componentPath": "@/components/shop/index.vue",
+    "preLoadSections": []
   },
   {
     "slug": "/404",
+    "section": "misc",
     "requiresAuth": false,
     "supportedRoles": [],
-    "componentPath": "@/components/NotFound.vue"
+    "componentPath": "@/components/NotFound.vue",
+    "preLoadSections": []
   },
   { "slug": "/:pathMatch(.*)*", "redirect": "/404" }
 ]

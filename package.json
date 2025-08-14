@@ -10,7 +10,13 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test:unit": "vitest"
+    "test:unit": "vitest",
+    "build:lazy": "vite build --mode lazy",
+    "build:eager:auth": "VITE_EAGER_SECTION=auth vite build --mode eager",
+    "build:eager:dashboard": "VITE_EAGER_SECTION=dashboard vite build --mode eager",
+    "build:eager:profile": "VITE_EAGER_SECTION=profile vite build --mode eager",
+    "build:eager:discover": "VITE_EAGER_SECTION=discover vite build --mode eager",
+    "build:eager:shop": "VITE_EAGER_SECTION=shop vite build --mode eager"
   },
   "dependencies": {
     "amazon-cognito-identity-js": "^6.3.15",

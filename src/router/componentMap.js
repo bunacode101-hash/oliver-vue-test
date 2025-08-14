@@ -7,10 +7,14 @@ import SignUpOnboardingKYCStatus from "@/components/auth/sign-up/onboarding-kyc-
 import LostPassword from "@/components/auth/lost-password.vue";
 import ResetPassword from "@/components/auth/reset-password.vue";
 import ConfirmEmail from "@/components/auth/confirm-email.vue";
+import DashboardIndex from "@/components/dashboard/index.vue";
 import DashboardOverviewCreator from "@/components/dashboard/dashboardOverviewCreator.vue";
 import DashboardOverviewVendor from "@/components/dashboard/dashboardOverviewVendor.vue";
 import DashboardOverviewCustomer from "@/components/dashboard/dashboardOverviewCustomer.vue";
 import DashboardOverviewAgent from "@/components/dashboard/dashboardOverviewAgent.vue";
+import ProfileIndex from "@/components/profile/index.vue";
+import DiscoverIndex from "@/components/discover/index.vue";
+import ShopIndex from "@/components/shop/index.vue";
 import NotFound from "@/components/NotFound.vue";
 
 export const componentMap = {
@@ -22,9 +26,13 @@ export const componentMap = {
   "/lost-password": LostPassword,
   "/reset-password": ResetPassword,
   "/confirm-email": ConfirmEmail,
+  "/dashboard": DashboardIndex,
   "/dashboard/overview/creator": DashboardOverviewCreator,
   "/dashboard/overview/vendor": DashboardOverviewVendor,
   "/dashboard/overview/customer": DashboardOverviewCustomer,
   "/dashboard/overview/agent": DashboardOverviewAgent,
+  "/profile": ProfileIndex,
+  "/discover": DiscoverIndex,
+  "/shop": ShopIndex,
   "/404": NotFound,
 };
