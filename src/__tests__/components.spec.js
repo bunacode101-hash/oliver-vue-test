@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import App from '@/App.vue'
-import LogIn from '@/views/components/auth/log-in.vue'
-import DashboardOverviewCreator from '@/views/components/dashboard/dashboardOverviewCreator.vue'
+import LogIn from '@/components/auth/log-in.vue'
+import DashboardOverviewCreator from '@/components/dashboard/dashboardOverviewCreator.vue'
 
 describe('Components', () => {
   let pinia

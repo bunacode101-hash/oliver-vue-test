@@ -4,21 +4,21 @@
     "requiresAuth": false,
     "redirectIfLoggedIn": "/dashboard",
     "supportedRoles": [],
-    "componentPath": "@/views/components/auth/log-in.vue"
+    "componentPath": "@/components/auth/log-in.vue"
   },
   {
     "slug": "/sign-up",
     "requiresAuth": false,
     "redirectIfLoggedIn": "/dashboard",
     "supportedRoles": [],
-    "componentPath": "@/views/components/auth/sign-up.vue"
+    "componentPath": "@/components/auth/sign-up.vue"
   },
   {
     "slug": "/sign-up/onboarding",
     "requiresAuth": true,
     "redirectIfNotAuth": "/log-in",
     "supportedRoles": ["creator"],
-    "componentPath": "@/views/components/auth/sign-up-onboarding.vue",
+    "componentPath": "@/components/auth/sign-up-onboarding.vue",
     "dependencies": {
       "roles": {
         "creator": {
@@ -32,7 +32,7 @@
     "requiresAuth": true,
     "redirectIfNotAuth": "/log-in",
     "supportedRoles": ["creator"],
-    "componentPath": "@/views/components/auth/sign-up-onboarding-kyc.vue",
+    "componentPath": "@/components/auth/sign-up-onboarding-kyc.vue",
     "dependencies": {
       "roles": {
         "creator": {
@@ -46,7 +46,7 @@
     "requiresAuth": true,
     "redirectIfNotAuth": "/log-in",
     "supportedRoles": ["creator"],
-    "componentPath": "@/views/components/auth/sign-up/onboarding-kyc-status.vue",
+    "componentPath": "@/components/auth/sign-up/onboarding-kyc-status.vue",
     "dependencies": {
       "roles": {
         "creator": {
@@ -60,21 +60,21 @@
     "redirectIfLoggedIn": "/dashboard",
     "requiresAuth": false,
     "supportedRoles": [],
-    "componentPath": "@/views/components/auth/lost-password.vue"
+    "componentPath": "@/components/auth/lost-password.vue"
   },
   {
     "slug": "/reset-password",
     "requiresAuth": false,
     "redirectIfLoggedIn": "/dashboard",
     "supportedRoles": [],
-    "componentPath": "@/views/components/auth/reset-password.vue"
+    "componentPath": "@/components/auth/reset-password.vue"
   },
   {
     "slug": "/confirm-email",
     "requiresAuth": false,
     "redirectIfLoggedIn": "/dashboard",
     "supportedRoles": [],
-    "componentPath": "@/views/components/auth/confirm-email.vue"
+    "componentPath": "@/components/auth/confirm-email.vue"
   },
   {
     "slug": "/dashboard",
@@ -115,16 +115,16 @@
     "inheritConfigFromParent": true,
     "customComponentPath": {
       "creator": {
-        "componentPath": "@/views/components/dashboard/dashboardOverviewCreator.vue"
+        "componentPath": "@/components/dashboard/dashboardOverviewCreator.vue"
       },
       "vendor": {
-        "componentPath": "@/views/components/dashboard/dashboardOverviewVendor.vue"
+        "componentPath": "@/components/dashboard/dashboardOverviewVendor.vue"
       },
       "customer": {
-        "componentPath": "@/views/components/dashboard/dashboardOverviewCustomer.vue"
+        "componentPath": "@/components/dashboard/dashboardOverviewCustomer.vue"
       },
       "agent": {
-        "componentPath": "@/views/components/dashboard/dashboardOverviewAgent.vue"
+        "componentPath": "@/components/dashboard/dashboardOverviewAgent.vue"
       }
     }
   },
@@ -132,7 +132,7 @@
     "slug": "/404",
     "requiresAuth": false,
     "supportedRoles": [],
-    "componentPath": "@/views/components/NotFound.vue"
+    "componentPath": "@/components/NotFound.vue"
   },
   { "slug": "/:pathMatch(.*)*", "redirect": "/404" }
 ]

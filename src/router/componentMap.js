@@ -1,17 +1,17 @@
 // src/router/componentMap.js
-import LogIn from "@/views/components/auth/log-in.vue";
-import SignUp from "@/views/components/auth/sign-up.vue";
-import SignUpOnboarding from "@/views/components/auth/sign-up-onboarding.vue";
-import SignUpOnboardingKYC from "@/views/components/auth/sign-up-onboarding-kyc.vue";
-import SignUpOnboardingKYCStatus from "@/views/components/auth/sign-up/onboarding-kyc-status.vue";
-import LostPassword from "@/views/components/auth/lost-password.vue";
-import ResetPassword from "@/views/components/auth/reset-password.vue";
-import ConfirmEmail from "@/views/components/auth/confirm-email.vue";
-import DashboardOverviewCreator from "@/views/components/dashboard/dashboardOverviewCreator.vue";
-import DashboardOverviewVendor from "@/views/components/dashboard/dashboardOverviewVendor.vue";
-import DashboardOverviewCustomer from "@/views/components/dashboard/dashboardOverviewCustomer.vue";
-import DashboardOverviewAgent from "@/views/components/dashboard/dashboardOverviewAgent.vue";
-import NotFound from "@/views/components/NotFound.vue";
+import LogIn from "@/components/auth/log-in.vue";
+import SignUp from "@/components/auth/sign-up.vue";
+import SignUpOnboarding from "@/components/auth/sign-up-onboarding.vue";
+import SignUpOnboardingKYC from "@/components/auth/sign-up-onboarding-kyc.vue";
+import SignUpOnboardingKYCStatus from "@/components/auth/sign-up/onboarding-kyc-status.vue";
+import LostPassword from "@/components/auth/lost-password.vue";
+import ResetPassword from "@/components/auth/reset-password.vue";
+import ConfirmEmail from "@/components/auth/confirm-email.vue";
+import DashboardOverviewCreator from "@/components/dashboard/dashboardOverviewCreator.vue";
+import DashboardOverviewVendor from "@/components/dashboard/dashboardOverviewVendor.vue";
+import DashboardOverviewCustomer from "@/components/dashboard/dashboardOverviewCustomer.vue";
+import DashboardOverviewAgent from "@/components/dashboard/dashboardOverviewAgent.vue";
+import NotFound from "@/components/NotFound.vue";
 
 export const componentMap = {
   "/log-in": LogIn,

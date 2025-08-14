@@ -3,7 +3,7 @@ import { useAuthStore } from "@/stores/useAuthStore";
 const auth = useAuthStore();
 
 // Simulate a Creator user for testing fallbacks
-auth.simulateRole("vendor", { onboardingPassed: true, kycPassed: true });
+auth.simulateRole("creator", { onboardingPassed: false, kycPassed: true });
 </script>
 
 <template>
