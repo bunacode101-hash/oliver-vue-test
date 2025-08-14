@@ -1,6 +1,9 @@
 import { useSectionCache } from "@/stores/sectionCache";
-import AssetHandler from "@/assets/AssetHandlerNew"; // adjust import name/path
-import routesJson from "@/router/routes.json";
+import {
+  preloadByFlags,
+  setAssetsVersionOnce,
+} from "@/assets/assetHandlerGlue"; // Use instance via glue
+import routesJson from "@/router/routeConfig.json";
 
 function getVersion() {
   return import.meta.env?.VITE_APP_VERSION ?? "dev";
@@ -19,20 +22,45 @@ function collectDeclaredAssets(componentModule) {
   };
 }
 
-// Send to AssetHandler using flags; it resolves priorities internally (critical > high > normal)
-async function preloadAssetsForFlags(flags) {
-  // AssetHandler API is flags-based; just pass our flags.
-  try {
-    AssetHandler?.preloadAssetsByFlag?.(...flags);
-  } catch {}
-}
-
 // Build flags for a route/section
 function flagsFor(section, routePath) {
   const list = new Set();
   if (section) list.add(section);
   if (routePath) list.add(routePath); // allow route-specific flags
   return Array.from(list);
+}
+
+// Direct preload function for declared assets (with priority, versioning, deduping)
+const preloaded = new Set(); // Global dedupe set (or move to instance if preferred)
+function preloadDeclaredAssets(assets, version) {
+  const priorities = ["critical", "high", "normal"];
+  priorities.forEach((priority) => {
+    assets[priority].forEach((url) => {
+      const versionedUrl = version ? `${url}?ver=${version}` : url;
+      if (preloaded.has(versionedUrl)) return;
+
+      console.log(`Preloading ${priority} asset: ${versionedUrl}`); // Debug
+
+      if (url.endsWith(".css")) {
+        const link = document.createElement("link");
+        link.rel = "preload";
+        link.as = "style";
+        link.href = versionedUrl;
+        document.head.appendChild(link);
+      } else if (url.endsWith(".js")) {
+        const link = document.createElement("link");
+        link.rel = "preload";
+        link.as = "script";
+        link.href = versionedUrl;
+        document.head.appendChild(link);
+      } else {
+        // Images/media
+        fetch(versionedUrl, { mode: "no-cors" });
+      }
+
+      preloaded.add(versionedUrl);
+    });
+  });
 }
 
 export const SectionPrefetcher = (() => {
@@ -42,9 +70,7 @@ export const SectionPrefetcher = (() => {
   function ensureAssetHandlerVersion() {
     if (bootVersionSet) return;
     const v = getVersion();
-    try {
-      AssetHandler?.setGlobalVersion?.(v);
-    } catch {}
+    setAssetsVersionOnce(v); // Use glue for instance
     bootVersionSet = true;
   }
 
@@ -53,7 +79,10 @@ export const SectionPrefetcher = (() => {
     ensureAssetHandlerVersion();
 
     const cache = useSectionCache();
-    if (cache.isSectionWarm(section)) return;
+    if (cache.isSectionWarm(section)) {
+      console.log(`Section ${section} already warm, skipping.`); // Debug
+      return;
+    }
 
     // 1) Collect all routes in this section
     const allRoutes = routerGetRoutes()
@@ -67,6 +96,8 @@ export const SectionPrefetcher = (() => {
     const componentKeys = new Set();
     const allFlags = new Set();
     allFlags.add(section);
+    const version = getVersion(); // For asset versioning
+    let allDeclaredAssets = { critical: [], high: [], normal: [] }; // Aggregate per section
 
     // 2) Pre-import code for each route (lazy functions)
     await Promise.allSettled(
@@ -81,16 +112,22 @@ export const SectionPrefetcher = (() => {
           if (key) cache.markComponentWarm(key), componentKeys.add(key);
           // gather flags: section + route path
           flagsFor(section, r.path).forEach((f) => allFlags.add(f));
-          // collect declared assets (no URLs sent directly; we use flags with AssetHandler)
-          // If you want to directly load those URLs too, you could dispatch custom flags per-URL here.
-        } catch {
-          /* swallow; still continue warming others */
+          // Collect and aggregate declared assets
+          const declared = collectDeclaredAssets(mod);
+          Object.keys(declared).forEach((p) => {
+            allDeclaredAssets[p] = [...allDeclaredAssets[p], ...declared[p]];
+          });
+        } catch (e) {
+          console.error(`Error warming route ${r.path}:`, e); // Debug errors
         }
       })
     );
 
-    // 3) Preload assets by flags using AssetHandler (section + individual route slugs)
-    await preloadAssetsForFlags(Array.from(allFlags));
+    // 3) Preload aggregated declared assets directly (priority order)
+    preloadDeclaredAssets(allDeclaredAssets, version);
+
+    // 4) Also call flag-based preload (if assetsConfig populated in glue)
+    preloadByFlags(Array.from(allFlags)); // Use glue for instance
 
     warmedSectionModules.set(section, componentKeys);
     cache.markSectionWarm(section);

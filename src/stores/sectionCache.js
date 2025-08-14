@@ -4,11 +4,17 @@ const LS_KEY = "sectionWarmState";
 const LS_VER_KEY = "sectionWarmStateVersion";
 
 function readJSON(key, fallback) {
-  try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
-  catch { return fallback; }
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallback;
+  } catch {
+    return fallback;
+  }
 }
 function writeJSON(key, value) {
-  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
 }
 
 export const useSectionCache = defineStore("sectionCache", {
@@ -19,12 +25,13 @@ export const useSectionCache = defineStore("sectionCache", {
   }),
   actions: {
     hydrate(version) {
-      const storedVersion = readJSON(LS_VER_KEY, null);
+      console.log("Hydrating cache with version:", version); // Added debug
+      const storedVersion = localStorage.getItem(LS_VER_KEY); // read as plain string
       if (storedVersion === version) {
         this.warmSections = readJSON(LS_KEY, {});
       } else {
         this.warmSections = {};
-        writeJSON(LS_VER_KEY, version);
+        localStorage.setItem(LS_VER_KEY, version); // store plain string
         writeJSON(LS_KEY, this.warmSections);
       }
       this.appVersion = version;
@@ -32,9 +39,14 @@ export const useSectionCache = defineStore("sectionCache", {
     persist() {
       writeJSON(LS_KEY, this.warmSections);
     },
-    isSectionWarm(section) { return !!this.warmSections?.[section]; },
+    isSectionWarm(section) {
+      return !!this.warmSections?.[section];
+    },
     markSectionWarm(section) {
       if (!section) return;
+      // Debug log to see which sections are being warmed
+      console.log("Warming:", section);
+
       this.warmSections[section] = true;
       this.persist();
     },
@@ -46,8 +58,8 @@ export const useSectionCache = defineStore("sectionCache", {
       this.warmSections = {};
       this.warmComponents = {};
       this.appVersion = version;
-      writeJSON(LS_VER_KEY, version);
+      localStorage.setItem(LS_VER_KEY, version);
       writeJSON(LS_KEY, this.warmSections);
-    }
-  }
+    },
+  },
 });

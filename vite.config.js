@@ -17,4 +17,8 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+  test: {
+    environment: 'jsdom', // For DOM testing
+    globals: true, // Avoid importing vi from vitest
+  },
 })
