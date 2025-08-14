@@ -1,7 +1,16 @@
-<template>
-  <div>
-    <h1>KYC Status</h1>
-    <p>Show status of KYC verification for creator</p>
-  </div>
-</template>
 <script setup></script>
+
+<script>
+export const assets = {
+  critical: [],
+  high: [],
+  normal: [],
+};
+</script>
+
+<template>
+  <main>
+    <h1>KYC Status</h1>
+    <p>Your KYC status will be shown here.</p>
+  </main>
+</template>

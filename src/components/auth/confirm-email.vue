@@ -1,7 +1,29 @@
+<script setup>
+import { ref } from "vue";
+const code = ref("");
+function submit(e) {
+  e.preventDefault();
+  console.log("confirm email", code.value);
+}
+</script>
+
+<script>
+export const assets = {
+  critical: ["/css/auth.css"],
+  high: [],
+  normal: [],
+};
+</script>
+
 <template>
-  <div>
+  <main>
     <h1>Confirm Email</h1>
-    <p>Please check your inbox to confirm your email.</p>
-  </div>
+    <form @submit="submit" novalidate>
+      <div>
+        <label>Code</label>
+        <input v-model="code" />
+      </div>
+      <button type="submit">Confirm</button>
+    </form>
+  </main>
 </template>
-<script setup></script>

@@ -1,7 +1,29 @@
+<script setup>
+import { ref } from "vue";
+const name = ref("");
+function submit(e) {
+  e.preventDefault();
+  console.log("onboarding submit", name.value);
+}
+</script>
+
+<script>
+export const assets = {
+  critical: ["/css/onboarding.css"],
+  high: [],
+  normal: [],
+};
+</script>
+
 <template>
-  <div>
-    <h1>Sign Up Onboarding</h1>
-    <p>Dashboard for Creator onboarding steps</p>
-  </div>
+  <main>
+    <h1>Onboarding</h1>
+    <form @submit="submit" novalidate>
+      <div>
+        <label>Display name</label>
+        <input v-model="name" required />
+      </div>
+      <button type="submit">Continue</button>
+    </form>
+  </main>
 </template>
-<script setup></script>
