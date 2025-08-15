@@ -1,16 +1,20 @@
-<script setup></script>
-
 <script>
+// import heavyImage from '@/assets/heavy.jpg';
 export const assets = {
   critical: ["/css/profile.css"],
   high: [],
-  normal: [],
+  normal: ["/assets/heavy.jpg"],
 };
 </script>
 
 <template>
-  <main>
-    <h1>Profile</h1>
-    <p>Profile page</p>
-  </main>
+  <div>
+    <h1>Profile Page</h1>
+    <!-- Heavy image test -->
+    <!-- <img :src="heavyImage" alt="Heavy test image" /> -->
+  </div>
 </template>
+
+<style scoped>
+/* optional styling */
+</style>
