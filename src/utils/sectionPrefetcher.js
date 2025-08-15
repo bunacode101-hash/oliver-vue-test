@@ -1,15 +1,11 @@
 import { useSectionCache } from "@/stores/sectionCache";
-import {
-  preloadByFlags,
-  setAssetsVersionOnce,
-} from "@/assets/assetHandlerGlue"; // Use instance via glue
+import { preloadByFlags, setAssetsVersionOnce } from "@/assets/assetHandlerGlue";
 import routesJson from "@/router/routeConfig.json";
 
 function getVersion() {
   return import.meta.env?.VITE_APP_VERSION ?? "dev";
 }
 
-// Extract assets export (component or module)
 function collectDeclaredAssets(componentModule) {
   const mod = componentModule;
   const comp = mod?.default ?? mod;
@@ -22,26 +18,28 @@ function collectDeclaredAssets(componentModule) {
   };
 }
 
-// Build flags for a route/section
 function flagsFor(section, routePath) {
   const list = new Set();
   if (section) list.add(section);
-  if (routePath) list.add(routePath); // allow route-specific flags
+  if (routePath) list.add(routePath);
   return Array.from(list);
 }
 
-// Direct preload function for declared assets (with priority, versioning, deduping)
-const preloaded = new Set(); // Global dedupe set (or move to instance if preferred)
+const preloaded = new Set();
 function preloadDeclaredAssets(assets, version) {
   const priorities = ["critical", "high", "normal"];
   priorities.forEach((priority) => {
     assets[priority].forEach((url) => {
       const versionedUrl = version ? `${url}?ver=${version}` : url;
-      if (preloaded.has(versionedUrl)) return;
-
-      console.log(`Preloading ${priority} asset: ${versionedUrl}`); // Debug
-
-      if (url.endsWith(".css")) {
+      if (preloaded.has(versionedUrl)) {
+        return;
+      }
+      if (url.endsWith(".css") && priority === "critical") {
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = versionedUrl;
+        document.head.appendChild(link);
+      } else if (url.endsWith(".css")) {
         const link = document.createElement("link");
         link.rel = "preload";
         link.as = "style";
@@ -49,104 +47,109 @@ function preloadDeclaredAssets(assets, version) {
         document.head.appendChild(link);
       } else if (url.endsWith(".js")) {
         const link = document.createElement("link");
-        link.rel = "preload";
+         link.rel = "prefetch";
         link.as = "script";
         link.href = versionedUrl;
         document.head.appendChild(link);
       } else {
-        // Images/media
         fetch(versionedUrl, { mode: "no-cors" });
       }
-
       preloaded.add(versionedUrl);
     });
   });
 }
 
 export const SectionPrefetcher = (() => {
-  const warmedSectionModules = new Map(); // section → component keys
+  const warmedSectionModules = new Map();
+  const pendingWarms = new Map();
   let bootVersionSet = false;
 
   function ensureAssetHandlerVersion() {
     if (bootVersionSet) return;
     const v = getVersion();
-    setAssetsVersionOnce(v); // Use glue for instance
+    setAssetsVersionOnce(v);
     bootVersionSet = true;
   }
 
   async function ensureSectionWarm(section, routerGetRoutes) {
     if (!section) return;
     ensureAssetHandlerVersion();
-
     const cache = useSectionCache();
     if (cache.isSectionWarm(section)) {
-      console.log(`Section ${section} already warm, skipping.`); // Debug
+      console.log(`Section ${section} already warm, skipping preload`);
       return;
     }
 
-    // 1) Collect all routes in this section
-    const allRoutes = routerGetRoutes()
-      .filter((rr) => rr.meta?.section === section)
-      .map((rr) => ({
-        path: rr.path,
-        meta: rr.meta,
-        component: rr.components?.default || rr.component,
-      }));
+    let promise = pendingWarms.get(section);
+    if (promise) {
+      return promise;
+    }
 
-    const componentKeys = new Set();
-    const allFlags = new Set();
-    allFlags.add(section);
-    const version = getVersion(); // For asset versioning
-    let allDeclaredAssets = { critical: [], high: [], normal: [] }; // Aggregate per section
+    promise = (async () => {
+      try {
+        const allRoutes = routerGetRoutes()
+          .filter((rr) => rr.meta?.section === section)
+          .map((rr) => ({
+            path: rr.path,
+            meta: rr.meta,
+            component: rr.components?.default || rr.component,
+          }));
+        const componentKeys = new Set();
+        const allFlags = new Set();
+        allFlags.add(section);
+        const version = getVersion();
+        let allDeclaredAssets = { critical: [], high: [], normal: [] };
 
-    // 2) Pre-import code for each route (lazy functions)
-    await Promise.allSettled(
-      allRoutes.map(async (r) => {
-        const loader = r.component;
-        if (typeof loader !== "function") return;
-        try {
-          const mod = await loader();
-          // record some identity for warmComponents
-          const key =
-            mod?.__file || mod?.default?.__file || mod?.default?.name || r.path;
-          if (key) cache.markComponentWarm(key), componentKeys.add(key);
-          // gather flags: section + route path
-          flagsFor(section, r.path).forEach((f) => allFlags.add(f));
-          // Collect and aggregate declared assets
-          const declared = collectDeclaredAssets(mod);
-          Object.keys(declared).forEach((p) => {
-            allDeclaredAssets[p] = [...allDeclaredAssets[p], ...declared[p]];
-          });
-        } catch (e) {
-          console.error(`Error warming route ${r.path}:`, e); // Debug errors
-        }
-      })
-    );
+        await Promise.allSettled(
+          allRoutes.map(async (r) => {
+            const loader = r.component;
+            if (typeof loader !== "function") {
+              return;
+            }
+            const key = r.path;
+            if (cache.isSectionWarm(section) && warmedSectionModules.get(section)?.has(key)) {
+              console.log(`Skipping import for warmed component: ${key}`);
+              return;
+            }
+            try {
+              const mod = await loader();
+              const compKey = mod?.__file || mod?.default?.__file || mod?.default?.name || key;
+              if (compKey) {
+                cache.markComponentWarm(compKey);
+                componentKeys.add(compKey);
+              }
+              flagsFor(section, r.path).forEach(f => allFlags.add(f));
+              const declared = collectDeclaredAssets(mod);
+              Object.keys(declared).forEach((p) => {
+                allDeclaredAssets[p] = [...allDeclaredAssets[p], ...declared[p]];
+              });
+            } catch (e) {
+              console.error(`Error warming route ${r.path}:`, e);
+            }
+          })
+        );
 
-    // 3) Preload aggregated declared assets directly (priority order)
-    preloadDeclaredAssets(allDeclaredAssets, version);
+        preloadDeclaredAssets(allDeclaredAssets, version);
+        preloadByFlags(Array.from(allFlags));
+        warmedSectionModules.set(section, componentKeys);
+        cache.markSectionWarm(section);
+      } finally {
+        pendingWarms.delete(section);
+      }
+    })();
 
-    // 4) Also call flag-based preload (if assetsConfig populated in glue)
-    preloadByFlags(Array.from(allFlags)); // Use glue for instance
-
-    warmedSectionModules.set(section, componentKeys);
-    cache.markSectionWarm(section);
+    pendingWarms.set(section, promise);
+    return promise;
   }
 
-  // role-aware dynamic preload additions
   function dynamicPreloadsForRoute(to, userRole) {
     const list = new Set();
-    // Always include "auth" to keep it hot
     list.add("auth");
-
-    // from JSON meta preLoadSections
     const jsonMatch = routesJson.find((r) => r.slug === to.path);
     (jsonMatch?.preLoadSections || []).forEach((s) => s && list.add(s));
-
-    // additional custom logic
-    const section = to.meta?.section;
-    if (section === "profile" && userRole === "creator") list.add("dashboard");
-
+    if (to.meta?.section === "profile" && userRole === "creator") {
+      list.add("dashboard");
+    }
     return Array.from(list);
   }
 

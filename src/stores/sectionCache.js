@@ -11,6 +11,7 @@ function readJSON(key, fallback) {
     return fallback;
   }
 }
+
 function writeJSON(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
@@ -25,13 +26,14 @@ export const useSectionCache = defineStore("sectionCache", {
   }),
   actions: {
     hydrate(version) {
-      console.log("Hydrating cache with version:", version); // Added debug
-      const storedVersion = localStorage.getItem(LS_VER_KEY); // read as plain string
+      console.log("Hydrating cache with version:", version);
+      const storedVersion = readJSON(LS_VER_KEY, null);
       if (storedVersion === version) {
         this.warmSections = readJSON(LS_KEY, {});
+        console.log("Restored warmSections:", this.warmSections);
       } else {
         this.warmSections = {};
-        localStorage.setItem(LS_VER_KEY, version); // store plain string
+        writeJSON(LS_VER_KEY, version);
         writeJSON(LS_KEY, this.warmSections);
       }
       this.appVersion = version;
@@ -40,13 +42,11 @@ export const useSectionCache = defineStore("sectionCache", {
       writeJSON(LS_KEY, this.warmSections);
     },
     isSectionWarm(section) {
-      return !!this.warmSections?.[section];
+      return !!this.warmSections[section];
     },
     markSectionWarm(section) {
       if (!section) return;
-      // Debug log to see which sections are being warmed
-      console.log("Warming:", section);
-
+      console.log("Marking section warm:", section);
       this.warmSections[section] = true;
       this.persist();
     },
@@ -58,7 +58,7 @@ export const useSectionCache = defineStore("sectionCache", {
       this.warmSections = {};
       this.warmComponents = {};
       this.appVersion = version;
-      localStorage.setItem(LS_VER_KEY, version);
+      writeJSON(LS_VER_KEY, version);
       writeJSON(LS_KEY, this.warmSections);
     },
   },

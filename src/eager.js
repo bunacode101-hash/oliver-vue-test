@@ -1,3 +1,4 @@
+// src/eager.js
 // Only called when MODE === "eager". Pre-imports ONE section from env.
 const eager = import.meta.env?.VITE_EAGER_SECTION;
 if (eager) {
@@ -9,7 +10,7 @@ if (eager) {
       imp.push(import("@/components/auth/sign-up.vue"));
       break;
     case "dashboard":
-      imp.push(import("@/components/dashboard/dashboardOverviewCreator.vue")); // Example; adjust if using index.vue
+      imp.push(import("@/components/dashboard/index.vue"));
       break;
     case "profile":
       imp.push(import("@/components/profile/index.vue"));
@@ -21,7 +22,5 @@ if (eager) {
       imp.push(import("@/components/shop/index.vue"));
       break;
   }
-  Promise.allSettled(imp).then(() => {
-    /* warmed */
-  });
+  Promise.allSettled(imp).then(() => {/* warmed */});
 }

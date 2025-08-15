@@ -1,6 +1,5 @@
 // Define the glob outside the function (top of the file)
 const modules = import.meta.glob("/src/**/*.vue"); // Adjust glob pattern to match your components (e.g., '/src/components/**/*.vue' if limited to components folder)
-
 export function lazy(path) {
   if (!path || typeof path !== "string") {
     return () => Promise.reject(new Error("lazy(): invalid path"));
@@ -9,7 +8,6 @@ export function lazy(path) {
   if (!normalized.startsWith("/")) {
     normalized = `/${normalized}`; // Ensure leading '/' to match glob keys
   }
-
   const loader = modules[normalized];
   if (!loader) {
     return () =>
@@ -17,7 +15,6 @@ export function lazy(path) {
         new Error(`lazy(): component not found for path ${normalized}`)
       );
   }
-
   // For testing only, attach normalized path
   loader._normalizedPath = normalized;
   return loader; // Returns the loader function: () => import(...)

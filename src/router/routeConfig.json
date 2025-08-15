@@ -1,5 +1,9 @@
 [
   {
+    "slug": "/",
+    "redirect": "/log-in"
+  },
+  {
     "slug": "/log-in",
     "section": "auth",
     "requiresAuth": false,

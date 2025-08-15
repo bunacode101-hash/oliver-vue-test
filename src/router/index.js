@@ -19,14 +19,12 @@ function toRouteRecord(r) {
       const auth = useAuthStore();
       const role = auth.simulate?.role || auth.currentUser?.role || "default";
       const compPath = r.customComponentPath[role]?.componentPath;
-      return compPath
-        ? lazy(compPath)()  // Call () here to return the Promise (keeps existing behavior; loader executes on route visit)
-        : import("@/components/NotFound.vue");  // This is a Promise; if you want lazy, wrap in () => import(...)
+      return compPath ? lazy(compPath)() : import("@/components/NotFound.vue");
     };
   } else {
     rec.component = r.componentPath
-      ? lazy(r.componentPath)  // No ()! Assigns the loader function
-      : () => import("@/components/NotFound.vue");  // Wrapped for lazy loading
+      ? lazy(r.componentPath)
+      : () => import("@/components/NotFound.vue");
   }
 
   return rec;
@@ -46,23 +44,28 @@ router.isReady().then(() => {
   const version = import.meta.env?.VITE_APP_VERSION ?? "dev";
   cache.hydrate(version);
   SectionPrefetcher.ensureAssetHandlerVersion();
-  void SectionPrefetcher.ensureSectionWarm("auth", () => router.getRoutes());
+  SectionPrefetcher.ensureSectionWarm("auth", () => router.getRoutes());
 });
 
 router.beforeResolve(async (to, _from) => {
+  if (to.path === "/404" || !to.matched.length) {
+    console.log("Skipping warm on invalid route:", to.path);
+    return true;
+  }
+
   const section = to.meta?.section || null;
 
   if (section) {
-    void SectionPrefetcher.ensureSectionWarm(section, () => router.getRoutes());
+    await SectionPrefetcher.ensureSectionWarm(section, () => router.getRoutes());
   } else {
-    void SectionPrefetcher.ensureSectionWarm("auth", () => router.getRoutes());
+    await SectionPrefetcher.ensureSectionWarm("auth", () => router.getRoutes());
   }
 
   const auth = useAuthStore();
-  const userRole = (auth.simulate?.role || auth.currentUser?.role) ?? null;
+  const userRole = auth.simulate?.role || auth.currentUser?.role || null;
 
   for (const s of SectionPrefetcher.dynamicPreloadsForRoute(to, userRole)) {
-    void SectionPrefetcher.ensureSectionWarm(s, () => router.getRoutes());
+    SectionPrefetcher.ensureSectionWarm(s, () => router.getRoutes());
   }
 
   return true;
