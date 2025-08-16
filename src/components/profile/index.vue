@@ -1,20 +1,29 @@
 <script>
-// import heavyImage from '@/assets/heavy.jpg';
-export const assets = {
-  critical: ["/css/profile.css"],
-  high: [],
-  normal: ["/assets/heavy.jpg"],
-};
+import heavy from "@/assets/heavy.jpg";
+
+export default {
+  setup() {
+    const assets = {
+      critical: ["/css/profile.css"],
+      high: [],
+      normal: [heavy],
+    };
+
+    return { heavy, assets }; // ✅ expose to template
+  },
+  };
 </script>
 
 <template>
   <div>
     <h1>Profile Page</h1>
-    <!-- Heavy image test -->
-    <!-- <img :src="heavyImage" alt="Heavy test image" /> -->
+    <img :src="heavy" alt="Heavy Image" />
   </div>
 </template>
 
 <style scoped>
-/* optional styling */
+/* Add some CSS to increase bundle size */
+.large-style {
+  content: url("@/assets/heavy.jpg"); /* Reference asset */
+}
 </style>

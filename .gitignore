@@ -11,6 +11,13 @@ node_modules
 .DS_Store
 dist
 dist-ssr
+dist-lazy
+dist-eager-all
+dist-eager-auth
+dist-eager-discover
+dist-eager-dashboard
+dist-eager-profile
+dist-eager-shop
 coverage
 *.local
 
@@ -29,3 +36,6 @@ coverage
 *.sw?
 
 *.tsbuildinfo
+
+public/assets
+public/section-bundles.json
