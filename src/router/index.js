@@ -78,6 +78,7 @@ router.isReady().then(() => {
   const store = useSectionsStore();
   const auth = useAuthStore();
   auth.refreshFromStorage();
+  console.log(`[READY] Router is ready. Section cache initialized.`);
 });
 
 export default router;

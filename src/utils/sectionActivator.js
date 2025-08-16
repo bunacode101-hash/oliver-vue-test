@@ -25,7 +25,7 @@ export async function isSectionActivated(section) {
     console.log(`[CACHE_HIT] Section "${section}" is already preloaded.`);
     return true;
   }
-  console.log(`[CACHE] Section "${section}" not cached yet.`);
+
   return false;
 }
 
@@ -45,8 +45,9 @@ export async function activateSection(section) {
   }
 
   const startTime = performance.now();
-  console.log(`[LAZY] Lazy loading section "${section}" (only current route).`);
-  console.log(`[SECTION_BUNDLE] Loading ${section} bundle from: ${url}`);
+  console.log(
+    `[PRELOAD] Preloading compiled section "${section}" from: ${url}`
+  );
 
   try {
     const importUrl = import.meta.env.DEV
@@ -55,7 +56,6 @@ export async function activateSection(section) {
     await import(/* @vite-ignore */ importUrl);
 
     activated[section] = true;
-    console.log(`[SECTION_ACTIVATED] All ${section} components now available.`);
     console.log(
       `[DONE] Route "${section}" loaded successfully (lazy load complete).`
     );
@@ -64,7 +64,7 @@ export async function activateSection(section) {
 
     const duration = (performance.now() - startTime).toFixed(2);
     console.log(
-      `[Callback] Preload "${section}" assets and cache completed in ${duration}ms.`
+      `[DONE] Preload "${section}" Assets and section "${section}" cached (took ${duration}ms).`
     );
 
     return true;

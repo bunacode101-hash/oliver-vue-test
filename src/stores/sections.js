@@ -15,7 +15,7 @@ export const useSectionsStore = defineStore("sections", {
     markActivated(section) {
       this.activated[section] = true;
       console.log(
-        `[COMPILED] Section "${section}" marked as activated (all its routes/components are now cached).`
+        `[CACHE] Section "${section}" marked as cached (compiled section ready).`
       );
     },
 

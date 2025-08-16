@@ -56,7 +56,6 @@ export function installSectionActivationGuard(router) {
         if (await isSectionActivated(otherSection)) {
           console.log(`[CACHE] Section "${otherSection}" already cached.`);
         } else {
-          console.log(`[CACHE] Section "${otherSection}" is not cached yet.`);
           console.log(
             `[PRELOAD] Preloading section "${otherSection}" and its assets...`
           );
