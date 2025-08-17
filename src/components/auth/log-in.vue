@@ -1,34 +1,26 @@
-<script setup>
-import { ref } from "vue";
-const email = ref("");
-const password = ref("");
-function submit(e) {
-  e.preventDefault();
-  console.log("log-in submit", email.value, password.value);
-}
-</script>
+<script setup></script>
 
 <script>
 export const assets = {
   critical: ["/css/auth.css"],
   high: [],
-  normal: [],
+  normal: ["/images/auth-bg.jpg"],
 };
 </script>
 
 <template>
-  <main>
-    <h1>Log In</h1>
-    <form @submit="submit" novalidate>
-      <div>
-        <label>Email</label>
-        <input v-model="email" type="email" required />
-      </div>
-      <div>
-        <label>Password</label>
-        <input v-model="password" type="password" required />
-      </div>
-      <button type="submit">Log in</button>
-    </form>
-  </main>
+  <section class="auth-section">
+    <h2>Log In</h2>
+    <p>Enter your credentials to access your account.</p>
+    <img
+      src="/images/auth-bg.jpg"
+      alt="Auth Background"
+      style="width: 100%; height: auto"
+    />
+  </section>
 </template>
+
+<style scoped>
+/* Ensure CSS is applied */
+@import "../../assets/css/auth.css";
+</style>

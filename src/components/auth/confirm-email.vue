@@ -1,29 +1,26 @@
-<script setup>
-import { ref } from "vue";
-const code = ref("");
-function submit(e) {
-  e.preventDefault();
-  console.log("confirm email", code.value);
-}
-</script>
+<script setup></script>
 
 <script>
 export const assets = {
   critical: ["/css/auth.css"],
   high: [],
-  normal: [],
+  normal: ["/images/auth-bg.jpg"],
 };
 </script>
 
 <template>
-  <main>
-    <h1>Confirm Email</h1>
-    <form @submit="submit" novalidate>
-      <div>
-        <label>Code</label>
-        <input v-model="code" />
-      </div>
-      <button type="submit">Confirm</button>
-    </form>
-  </main>
+  <section class="auth-section">
+    <h2>Confirm Email</h2>
+    <p>Confirm your email address.</p>
+    <img
+      src="/images/auth-bg.jpg"
+      alt="Auth Background"
+      style="width: 100%; height: auto"
+    />
+  </section>
 </template>
+
+<style scoped>
+/* Ensure CSS is applied */
+@import "../../assets/css/auth.css";
+</style>

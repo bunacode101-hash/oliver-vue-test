@@ -1,65 +1,41 @@
 import { useAuthStore } from "@/stores/useAuthStore";
-import { getRouteBySlug } from "./routeUtils";
 
-export default function routeGuard(to, from, next) {
-  const route = getRouteBySlug(to.path);
+export default async function routeGuard(to, from, next) {
   const auth = useAuthStore();
+  const role = auth.simulate?.role || auth.currentUser?.role || "default";
+  console.log(`[GUARD] Checking route "${to.path}" for role "${role}"`);
 
-  const user = auth.simulate || auth.currentUser;
-
-  if (!route) return next("/404");
-
-  // Auth checks (added)
-  let isAuthenticated = !!user;
-  // Bypass auth temporarily: force true for all auth guards as per instructions
-  isAuthenticated = true; // Comment this out later when adding Cognito
-
-  if (route.requiresAuth && !isAuthenticated) {
-    return next(route.redirectIfNotAuth || "/log-in");
+  // Handle requiresAuth
+  if (to.meta.requiresAuth && !auth.isAuthenticated) {
+    console.log(`[GUARD] Route "${to.path}" requires authentication. Redirecting to "${to.meta.redirectIfNotAuth || '/log-in'}".`);
+    return next(to.meta.redirectIfNotAuth || "/log-in");
   }
 
-  if (!route.requiresAuth && isAuthenticated && route.redirectIfLoggedIn) {
-    return next(route.redirectIfLoggedIn);
+  // Handle redirectIfLoggedIn
+  if (to.meta.redirectIfLoggedIn && auth.isAuthenticated) {
+    console.log(`[GUARD] User is authenticated. Redirecting from "${to.path}" to "${to.meta.redirectIfLoggedIn}".`);
+    return next(to.meta.redirectIfLoggedIn);
   }
 
-  // Role checks
-  if (
-    route.supportedRoles?.length &&
-    !["any", "all"].includes(route.supportedRoles[0]) &&
-    !route.supportedRoles.includes(user?.role)
-  ) {
-    return next("/dashboard");
-  }
-
-  // Dependency checks
-  const parentDeps = route.inheritConfigFromParent
-    ? getParentRouteDeps(to.path)
-    : [];
-  const allDeps = [...parentDeps, route];
-
-  for (const r of allDeps) {
-    if (!r) continue;
-
-    const deps = r.dependencies || {};
-    const roleDeps = deps.roles?.[user?.role] || {};
-
-    for (const [key, val] of Object.entries(roleDeps)) {
-      if (val.required && !user?.[key]) return next(val.fallbackSlug || "/404");
-    }
-
-    for (const [key, val] of Object.entries(deps)) {
-      if (key !== "roles" && val.required && !user?.[key])
-        return next(val.fallbackSlug || "/404");
+  // Handle supportedRoles
+  if (to.meta.supportedRoles && to.meta.supportedRoles.length > 0) {
+    if (!to.meta.supportedRoles.includes("any") && !to.meta.supportedRoles.includes(role)) {
+      console.log(`[GUARD] Role "${role}" not supported for "${to.path}". Redirecting to /404.`);
+      return next("/404");
     }
   }
 
+  // Handle role-specific dependencies
+  if (to.meta.dependencies?.roles?.[role]) {
+    const deps = to.meta.dependencies.roles[role];
+    for (const [key, { required, fallbackSlug }] of Object.entries(deps)) {
+      if (required && !auth.simulate?.[key] && !auth.currentUser?.[key]) {
+        console.log(`[GUARD] Dependency "${key}" not met for role "${role}" on "${to.path}". Redirecting to "${fallbackSlug}".`);
+        return next(fallbackSlug);
+      }
+    }
+  }
+
+  console.log(`[GUARD] Route "${to.path}" access granted for role "${role}".`);
   next();
-}
-
-function getParentRouteDeps(path) {
-  const segments = path.split("/");
-  segments.pop();
-  const parentPath = segments.join("/") || "/";
-  const parent = getRouteBySlug(parentPath);
-  return parent ? [parent] : [];
 }

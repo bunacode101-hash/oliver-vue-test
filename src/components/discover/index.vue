@@ -4,7 +4,7 @@
 export const assets = {
   critical: [],
   high: [],
-  normal: ["/img/discover-hero.jpg"],
+  normal: ["/images/media1.jpg"],
 };
 </script>
 

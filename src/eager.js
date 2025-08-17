@@ -1,26 +1,73 @@
-// src/eager.js
-// Only called when MODE === "eager". Pre-imports ONE section from env.
-const eager = import.meta.env?.VITE_EAGER_SECTION;
-if (eager) {
-  const imp = [];
-  // pre-import the section's primary views based on your explicit component paths
-  switch (eager) {
+const eagerSection = import.meta.env.VITE_EAGER_SECTION;
+
+if (eagerSection) {
+  console.log(`[EAGER] Pre-importing section "${eagerSection}"`);
+  const imports = [];
+  switch (eagerSection) {
     case "auth":
-      imp.push(import("@/components/auth/log-in.vue"));
-      imp.push(import("@/components/auth/sign-up.vue"));
+      imports.push(import("@/components/auth/log-in.vue"));
+      imports.push(import("@/components/auth/sign-up.vue"));
+      imports.push(import("@/components/auth/sign-up-onboarding.vue"));
+      imports.push(import("@/components/auth/sign-up-onboarding-kyc.vue"));
+      imports.push(
+        import("@/components/auth/sign-up/onboarding-kyc-status.vue")
+      );
+      imports.push(import("@/components/auth/lost-password.vue"));
+      imports.push(import("@/components/auth/reset-password.vue"));
+      imports.push(import("@/components/auth/confirm-email.vue"));
       break;
     case "dashboard":
-      imp.push(import("@/components/dashboard/index.vue"));
+      imports.push(import("@/components/dashboard/index.vue"));
+      imports.push(
+        import("@/components/dashboard/dashboardOverviewCreator.vue")
+      );
+      imports.push(
+        import("@/components/dashboard/dashboardOverviewVendor.vue")
+      );
+      imports.push(
+        import("@/components/dashboard/dashboardOverviewCustomer.vue")
+      );
+      imports.push(import("@/components/dashboard/dashboardOverviewAgent.vue"));
+      imports.push(
+        import("@/components/dashboard/dashboardEditProfileCreator.vue")
+      );
+      imports.push(
+        import("@/components/dashboard/dashboardEditSettingsCreator.vue")
+      );
+      imports.push(
+        import("@/components/dashboard/dashboardMyMediaCreator.vue")
+      );
       break;
     case "profile":
-      imp.push(import("@/components/profile/index.vue"));
+      imports.push(import("@/components/profile/index.vue"));
       break;
     case "discover":
-      imp.push(import("@/components/discover/index.vue"));
+      imports.push(import("@/components/discover/index.vue"));
       break;
     case "shop":
-      imp.push(import("@/components/shop/index.vue"));
+      imports.push(import("@/components/shop/index.vue"));
+      break;
+    case "misc":
+      imports.push(import("@/components/NotFound.vue"));
       break;
   }
-  Promise.allSettled(imp).then(() => {/* warmed */});
+  Promise.allSettled(imports).then((results) => {
+    results.forEach((result, index) => {
+      if (result.status === "fulfilled") {
+        console.log(
+          `[EAGER] Successfully pre-imported component ${
+            index + 1
+          } for section "${eagerSection}"`
+        );
+      } else {
+        console.error(
+          `[EAGER] Failed to pre-import component ${
+            index + 1
+          } for section "${eagerSection}":`,
+          result.reason
+        );
+      }
+    });
+    console.log(`[EAGER] Section "${eagerSection}" pre-import completed.`);
+  });
 }

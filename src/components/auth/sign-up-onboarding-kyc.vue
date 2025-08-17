@@ -1,29 +1,22 @@
-<script setup>
-import { ref } from "vue";
-const idNumber = ref("");
-function submit(e) {
-  e.preventDefault();
-  console.log("kyc submit", idNumber.value);
-}
-</script>
+<script setup></script>
 
 <script>
 export const assets = {
   critical: ["/css/onboarding.css"],
   high: [],
-  normal: [],
+  normal: ["/images/kyc-bg.jpg"],
 };
 </script>
 
 <template>
-  <main>
-    <h1>Onboarding — KYC</h1>
-    <form @submit="submit" novalidate>
-      <div>
-        <label>ID / Passport</label>
-        <input v-model="idNumber" required />
-      </div>
-      <button type="submit">Submit KYC</button>
-    </form>
-  </main>
+  <section class="onboarding-section">
+    <h2>KYC Verification</h2>
+    <p>Submit your KYC details.</p>
+    <img src="/images/kyc-bg.jpg" alt="KYC Background" style="width: 100%; height: auto;" />
+  </section>
 </template>
+
+<style scoped>
+/* Ensure CSS is applied */
+@import '../../assets/css/onboarding.css';
+</style>

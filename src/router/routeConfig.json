@@ -149,12 +149,28 @@
         "componentPath": "@/components/dashboard/dashboardOverviewAgent.vue"
       }
     },
-    "preLoadSections": []
+    "preLoadSections": ["profile"]
   },
   {
     "slug": "/dashboard/edit-profile",
     "section": "dashboard",
     "inheritConfigFromParent": true,
+    "supportedRoles": ["creator"],
+
+    "dependencies": {
+      "roles": {
+        "creator": {
+          "onboardingPassed": {
+            "required": true,
+            "fallbackSlug": "/sign-up/onboarding"
+          },
+          "kycPassed": {
+            "required": true,
+            "fallbackSlug": "/sign-up/onboarding/kyc"
+          }
+        }
+      }
+    },
     "customComponentPath": {
       "creator": {
         "componentPath": "@/components/dashboard/dashboardEditProfileCreator.vue"
@@ -169,12 +185,28 @@
         "componentPath": "@/components/dashboard/dashboardOverviewAgent.vue"
       }
     },
-    "preLoadSections": []
+    "preLoadSections": ["profile"]
   },
   {
     "slug": "/dashboard/edit-settings",
     "section": "dashboard",
     "inheritConfigFromParent": true,
+    "supportedRoles": ["creator"],
+
+    "dependencies": {
+      "roles": {
+        "creator": {
+          "onboardingPassed": {
+            "required": true,
+            "fallbackSlug": "/sign-up/onboarding"
+          },
+          "kycPassed": {
+            "required": true,
+            "fallbackSlug": "/sign-up/onboarding/kyc"
+          }
+        }
+      }
+    },
     "customComponentPath": {
       "creator": {
         "componentPath": "@/components/dashboard/dashboardEditSettingsCreator.vue"
@@ -189,11 +221,27 @@
         "componentPath": "@/components/dashboard/dashboardOverviewAgent.vue"
       }
     },
-    "preLoadSections": []
-  },{
+    "preLoadSections": ["profile"]
+  },
+  {
     "slug": "/dashboard/my-media",
     "section": "dashboard",
     "inheritConfigFromParent": true,
+    "supportedRoles": ["creator"],
+    "dependencies": {
+      "roles": {
+        "creator": {
+          "onboardingPassed": {
+            "required": true,
+            "fallbackSlug": "/sign-up/onboarding"
+          },
+          "kycPassed": {
+            "required": true,
+            "fallbackSlug": "/sign-up/onboarding/kyc"
+          }
+        }
+      }
+    },
     "customComponentPath": {
       "creator": {
         "componentPath": "@/components/dashboard/dashboardMyMediaCreator.vue"
@@ -202,18 +250,18 @@
         "componentPath": "@/components/dashboard/dashboardOverviewVendor.vue"
       },
       "customer": {
-        "componentPath": "@/components/dashboard/dashboardOverviewCustomer.vue"
+        "componentPath": "@components/dashboard/dashboardOverviewCustomer.vue"
       },
       "agent": {
         "componentPath": "@/components/dashboard/dashboardOverviewAgent.vue"
       }
     },
-    "preLoadSections": []
+    "preLoadSections": ["profile"]
   },
   {
     "slug": "/profile",
     "section": "profile",
-    "requiresAuth": true,
+    "requiresAuth": false,
     "supportedRoles": ["any"],
     "componentPath": "@/components/profile/index.vue",
     "preLoadSections": []
@@ -242,5 +290,8 @@
     "componentPath": "@/components/NotFound.vue",
     "preLoadSections": []
   },
-  { "slug": "/:pathMatch(.*)*", "redirect": "/404" }
+  {
+    "slug": "/:pathMatch(.*)*",
+    "redirect": "/404"
+  }
 ]

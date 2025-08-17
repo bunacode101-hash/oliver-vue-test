@@ -14,3 +14,8 @@ export const assets = {
     <p>Welcome to Dashboard. From here, navigate to overview.</p>
   </main>
 </template>
+
+<style scoped>
+/* Ensure CSS is applied */
+@import "../../assets/css/dashboard.css";
+</style>

@@ -2,15 +2,21 @@
 
 <script>
 export const assets = {
-  critical: [],
+  critical: ["/css/onboarding.css"],
   high: [],
-  normal: [],
+  normal: ["/images/kyc-status-bg.jpg"],
 };
 </script>
 
 <template>
-  <main>
-    <h1>KYC Status</h1>
-    <p>Your KYC status will be shown here.</p>
-  </main>
+  <section class="onboarding-section">
+    <h2>KYC Status</h2>
+    <p>Check the status of your KYC verification.</p>
+    <img src="/images/kyc-status-bg.jpg" alt="KYC Status Background" style="width: 100%; height: auto;" />
+  </section>
 </template>
+
+<style scoped>
+/* Ensure CSS is applied */
+@import '../../../assets/css/onboarding.css';
+</style>

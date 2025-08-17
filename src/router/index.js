@@ -19,6 +19,11 @@ function toRouteRecord(r) {
       const auth = useAuthStore();
       const role = auth.simulate?.role || auth.currentUser?.role || "default";
       const compPath = r.customComponentPath[role]?.componentPath;
+      console.log(
+        `[ROUTE] Resolving component for "${r.slug}" with role "${role}": ${
+          compPath || "NotFound"
+        }`
+      );
       return compPath ? lazy(compPath)() : import("@/components/NotFound.vue");
     };
   } else {
@@ -36,14 +41,19 @@ const router = createRouter({
   routes: routeRecords,
 });
 
+let navigationStartTime;
+
 router.beforeEach((to, from, next) => {
   const store = useSectionsStore();
   store.hydrate(import.meta.env.VITE_APP_VERSION || "dev");
+  console.log(
+    `[ROUTER] Hydrated sections store for navigation to "${to.path}"`
+  );
   next();
 });
 
 router.beforeEach((to, from, next) => {
-  const startTime = performance.now();
+  navigationStartTime = performance.now();
 
   console.log(`[ROUTE] Incoming navigation request: "${to.path}"`);
   console.log(`[CHECK] Looking for matching route configuration...`);
@@ -52,29 +62,31 @@ router.beforeEach((to, from, next) => {
   if (!matchedRoute) {
     console.log(`[404] No route found for "${to.path}".`);
     console.log(`[STOP] Navigation aborted. Redirecting to /404.`);
-
     return next("/404");
   }
 
-  console.log(`[FOUND] Route configuration located.`);
+  console.log(`[FOUND] Route configuration located for "${to.path}".`);
   console.log(`[CONFIG] Route metadata: ${JSON.stringify(matchedRoute.meta)}`);
 
   const section = matchedRoute.meta?.section;
   if (section) {
-    console.log(`[SECTION] This route belongs to section "${section}".`);
+    console.log(
+      `[SECTION] Route "${to.path}" belongs to section "${section}".`
+    );
   } else {
-    console.log(`[SECTION] This route does not specify a section.`);
+    console.log(`[SECTION] Route "${to.path}" does not specify a section.`);
   }
 
-  // log completion after navigation is ready
   next();
+});
 
-  router.afterEach(() => {
-    const duration = ((performance.now() - startTime) / 1000).toFixed(2);
-    console.log(
-      `[DONE] Navigation to "${to.path}" finished successfully in ${duration} seconds.`
-    );
-  });
+router.afterEach((to) => {
+  const duration = ((performance.now() - navigationStartTime) / 1000).toFixed(
+    2
+  );
+  console.log(
+    `[DONE] Navigation to "${to.path}" finished successfully in ${duration} seconds.`
+  );
 });
 
 router.beforeEach(routeGuard);

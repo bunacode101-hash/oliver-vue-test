@@ -1,29 +1,26 @@
-<script setup>
-import { ref } from "vue";
-const name = ref("");
-function submit(e) {
-  e.preventDefault();
-  console.log("onboarding submit", name.value);
-}
-</script>
+<script setup></script>
 
 <script>
 export const assets = {
   critical: ["/css/onboarding.css"],
   high: [],
-  normal: [],
+  normal: ["/images/onboarding-bg.jpg"],
 };
 </script>
 
 <template>
-  <main>
-    <h1>Onboarding</h1>
-    <form @submit="submit" novalidate>
-      <div>
-        <label>Display name</label>
-        <input v-model="name" required />
-      </div>
-      <button type="submit">Continue</button>
-    </form>
-  </main>
+  <section class="onboarding-section">
+    <h2>Onboarding</h2>
+    <p>Complete your onboarding process.</p>
+    <img
+      src="/images/onboarding-bg.jpg"
+      alt="Onboarding Background"
+      style="width: 100%; height: auto"
+    />
+  </section>
 </template>
+
+<style scoped>
+/* Ensure CSS is applied */
+@import "../../assets/css/onboarding.css";
+</style>
