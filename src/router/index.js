@@ -37,6 +37,12 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
+  const store = useSectionsStore();
+  store.hydrate(import.meta.env.VITE_APP_VERSION || "dev");
+  next();
+});
+
+router.beforeEach((to, from, next) => {
   const startTime = performance.now();
 
   console.log(`[ROUTE] Incoming navigation request: "${to.path}"`);
@@ -75,7 +81,6 @@ router.beforeEach(routeGuard);
 installSectionActivationGuard(router);
 
 router.isReady().then(() => {
-  const store = useSectionsStore();
   const auth = useAuthStore();
   auth.refreshFromStorage();
   console.log(`[READY] Router is ready. Section cache initialized.`);

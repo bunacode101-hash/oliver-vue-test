@@ -1,5 +1,7 @@
+import { useSectionsStore } from "@/stores/sections";
+
 let bundlesManifest = null;
-const activated = Object.create(null);
+const appVersion = import.meta.env.VITE_APP_VERSION || "dev";
 
 async function loadManifest() {
   if (bundlesManifest) {
@@ -20,17 +22,18 @@ async function loadManifest() {
   }
 }
 
-export async function isSectionActivated(section) {
-  if (activated[section]) {
+export function isSectionActivated(section) {
+  const store = useSectionsStore();
+  if (store.isActivated(section)) {
     console.log(`[CACHE_HIT] Section "${section}" is already preloaded.`);
     return true;
   }
-
   return false;
 }
 
 export async function activateSection(section) {
-  if (activated[section]) {
+  const store = useSectionsStore();
+  if (store.isActivated(section)) {
     console.log(
       `[CACHE_HIT] Section "${section}" already activated. Skipping preload.`
     );
@@ -45,21 +48,22 @@ export async function activateSection(section) {
   }
 
   const startTime = performance.now();
+  let importUrl = import.meta.env.DEV
+    ? url.replace("/assets/", "/public/assets/")
+    : url;
+  const versionedUrl = `${importUrl}?ver=${appVersion}`;
   console.log(
-    `[PRELOAD] Preloading compiled section "${section}" from: ${url}`
+    `[PRELOAD] Preloading compiled section "${section}" from: ${versionedUrl}`
   );
 
   try {
-    const importUrl = import.meta.env.DEV
-      ? url.replace("/assets/", "/public/assets/")
-      : url;
-    await import(/* @vite-ignore */ importUrl);
+    await import(/* @vite-ignore */ versionedUrl);
 
-    activated[section] = true;
     console.log(
       `[DONE] Route "${section}" loaded successfully (lazy load complete).`
     );
     console.log(`[DONE] All assets for section "${section}" downloaded.`);
+    console.log(`[ASSET_DOWNLOADED] ${versionedUrl}`);
     console.log(`[Callback] Assets and route completed`);
 
     const duration = (performance.now() - startTime).toFixed(2);

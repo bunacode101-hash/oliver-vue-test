@@ -67,7 +67,7 @@ export default defineConfig({
           if (id.includes("/components/discover/")) return "section-discover";
           if (id.includes("/components/shop/")) return "section-shop";
           if (id.includes("/components/NotFound.vue")) return "section-misc";
-          if (id.includes("/node_modules/")) return "vendor";
+          // if (id.includes("/node_modules/")) return "vendor";
         },
         chunkFileNames: "assets/[name]-[hash].js",
         entryFileNames: "assets/[name]-[hash].js",

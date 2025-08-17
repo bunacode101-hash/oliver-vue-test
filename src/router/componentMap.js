@@ -12,10 +12,13 @@ import DashboardOverviewCreator from "@/components/dashboard/dashboardOverviewCr
 import DashboardOverviewVendor from "@/components/dashboard/dashboardOverviewVendor.vue";
 import DashboardOverviewCustomer from "@/components/dashboard/dashboardOverviewCustomer.vue";
 import DashboardOverviewAgent from "@/components/dashboard/dashboardOverviewAgent.vue";
+import DashboardEditSettingsCreator from "@/components/dashboard/dashboardEditSettingsCreator.vue";
+import DashboardMyMediaCreator from "@/components/dashboard/dashboardMyMediaCreator.vue";
 import ProfileIndex from "@/components/profile/index.vue";
 import DiscoverIndex from "@/components/discover/index.vue";
 import ShopIndex from "@/components/shop/index.vue";
 import NotFound from "@/components/NotFound.vue";
+import DashboardEditProfileCreator from "@/components/dashboard/dashboardEditProfileCreator.vue";
 
 export const componentMap = {
   "/log-in": LogIn,
@@ -31,6 +34,9 @@ export const componentMap = {
   "/dashboard/overview/vendor": DashboardOverviewVendor,
   "/dashboard/overview/customer": DashboardOverviewCustomer,
   "/dashboard/overview/agent": DashboardOverviewAgent,
+  "/dashboard/edit-profile": DashboardEditProfileCreator,
+  "/dashboard/settings": DashboardEditSettingsCreator,
+  "/dashboard/my-media": DashboardMyMediaCreator,
   "/profile": ProfileIndex,
   "/discover": DiscoverIndex,
   "/shop": ShopIndex,

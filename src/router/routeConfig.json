@@ -152,6 +152,65 @@
     "preLoadSections": []
   },
   {
+    "slug": "/dashboard/edit-profile",
+    "section": "dashboard",
+    "inheritConfigFromParent": true,
+    "customComponentPath": {
+      "creator": {
+        "componentPath": "@/components/dashboard/dashboardEditProfileCreator.vue"
+      },
+      "vendor": {
+        "componentPath": "@/components/dashboard/dashboardOverviewVendor.vue"
+      },
+      "customer": {
+        "componentPath": "@/components/dashboard/dashboardOverviewCustomer.vue"
+      },
+      "agent": {
+        "componentPath": "@/components/dashboard/dashboardOverviewAgent.vue"
+      }
+    },
+    "preLoadSections": []
+  },
+  {
+    "slug": "/dashboard/edit-settings",
+    "section": "dashboard",
+    "inheritConfigFromParent": true,
+    "customComponentPath": {
+      "creator": {
+        "componentPath": "@/components/dashboard/dashboardEditSettingsCreator.vue"
+      },
+      "vendor": {
+        "componentPath": "@/components/dashboard/dashboardOverviewVendor.vue"
+      },
+      "customer": {
+        "componentPath": "@/components/dashboard/dashboardOverviewCustomer.vue"
+      },
+      "agent": {
+        "componentPath": "@/components/dashboard/dashboardOverviewAgent.vue"
+      }
+    },
+    "preLoadSections": []
+  },{
+    "slug": "/dashboard/my-media",
+    "section": "dashboard",
+    "inheritConfigFromParent": true,
+    "customComponentPath": {
+      "creator": {
+        "componentPath": "@/components/dashboard/dashboardMyMediaCreator.vue"
+      },
+      "vendor": {
+        "componentPath": "@/components/dashboard/dashboardOverviewVendor.vue"
+      },
+      "customer": {
+        "componentPath": "@/components/dashboard/dashboardOverviewCustomer.vue"
+      },
+      "agent": {
+        "componentPath": "@/components/dashboard/dashboardOverviewAgent.vue"
+      }
+    },
+    "preLoadSections": []
+  },
+  {
     "slug": "/profile",
     "section": "profile",
     "requiresAuth": true,

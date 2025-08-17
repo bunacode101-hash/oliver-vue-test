@@ -11,11 +11,11 @@ export function installSectionActivationGuard(router) {
     console.log(`\n[ROUTING] Section activation check for "${section}"`);
 
     // Check if section is already activated
-    if (await isSectionActivated(section)) {
-      console.log(`[CACHE] Section "${section}" exists in cache.`);
-      console.log(
-        `[CACHE] Proceeding to load cached section (instant navigation).`
-      );
+    if (isSectionActivated(section)) {
+      console.log(`[Activated] Section "${section}" already activated.`);
+      // console.log(
+      //   `[CACHE] Proceeding to load cached section (instant navigation).`
+      // );
       console.log(`[DONE] Callback "Assets and route completed"`);
       const routingDuration = (performance.now() - routingStartTime).toFixed(2);
       console.log(`[DONE] Vue routing completed in ${routingDuration}ms`);
@@ -53,7 +53,7 @@ export function installSectionActivationGuard(router) {
       );
 
       for (const otherSection of preLoadSections) {
-        if (await isSectionActivated(otherSection)) {
+        if (isSectionActivated(otherSection)) {
           console.log(`[CACHE] Section "${otherSection}" already cached.`);
         } else {
           console.log(
