@@ -2,7 +2,7 @@
 
 <script>
 export const assets = {
-  critical: ["/css/dashboard.css", "/css/onboarding.css"],
+  critical: ["/css/dashboard.css"],
   high: ["/js/vendor-charts.js"],
   normal: ["/images/image2.jpg"],
 };
@@ -12,11 +12,7 @@ export const assets = {
   <section class="dashboard-overview-creator">
     <h2>Creator Dashboard Overview</h2>
     <p>Creator-specific dashboard content.</p>
-    <img
-      src="/images/image2.jpg"
-      alt="Dashboard Image"
-      style="width: 100%; height: auto"
-    />
+    
     <nav style="margin-top: 1rem; display: flex; gap: 1rem">
       <router-link to="/dashboard/edit-profile">
         <button
@@ -61,13 +57,17 @@ export const assets = {
         </button>
       </router-link>
     </nav>
+    <!-- <img
+      src="/images/image2.jpg"
+      alt="Dashboard Image"
+      style="width: 100%; height: auto"
+    /> -->
   </section>
 </template>
 
 <style scoped>
 /* Ensure CSS is applied */
 @import "../../assets/css/dashboard.css";
-@import "../../assets/css/onboarding.css";
 
 nav {
   display: flex;

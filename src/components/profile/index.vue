@@ -9,9 +9,9 @@ export default {
       normal: [heavy],
     };
 
-    return { heavy, assets }; // ✅ expose to template
+    return { heavy, assets };
   },
-  };
+};
 </script>
 
 <template>
@@ -21,9 +21,4 @@ export default {
   </div>
 </template>
 
-<style scoped>
-/* Add some CSS to increase bundle size */
-.large-style {
-  content: url("@/assets/heavy.jpg"); /* Reference asset */
-}
-</style>
+<style scoped></style>

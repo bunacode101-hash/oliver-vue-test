@@ -12,15 +12,15 @@ export const assets = {
   <section class="auth-section">
     <h2>Lost Password</h2>
     <p>Recover your password.</p>
-    <img
+    <!-- <img
       src="/images/auth-bg.jpg"
       alt="Auth Background"
       style="width: 100%; height: auto"
-    />
+    /> -->
   </section>
 </template>
 
 <style scoped>
 /* Ensure CSS is applied */
-@import "../../assets/css/auth.css";
+@import "/css/auth.css";
 </style>

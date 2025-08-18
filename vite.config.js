@@ -43,6 +43,7 @@ export default defineConfig(({ mode }) => {
         "@": fileURLToPath(new URL("./src", import.meta.url)),
       },
     },
+    publicDir: "public",
     test: {
       environment: "jsdom",
       globals: true,

@@ -12,11 +12,11 @@ export const assets = {
   <section class="dashboard-overview-creator">
     <h2>Creator Dashboard My Media</h2>
     <p>Creator-specific dashboard content.</p>
-    <img
+    <!-- <img
       src="/images/image.jpg"
       alt="Media Image"
       style="width: 100%; height: auto"
-    />
+    /> -->
   </section>
 </template>
 

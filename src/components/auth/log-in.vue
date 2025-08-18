@@ -12,11 +12,11 @@ export const assets = {
   <section class="auth-section">
     <h2>Log In</h2>
     <p>Enter your credentials to access your account.</p>
-    <img
+    <!-- <img
       src="/images/auth-bg.jpg"
       alt="Auth Background"
       style="width: 100%; height: auto"
-    />
+    /> -->
   </section>
 </template>
 
