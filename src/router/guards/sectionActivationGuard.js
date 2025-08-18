@@ -1,3 +1,5 @@
+// router/guard/sectionActivationGuard.js
+
 import { lazy } from "@/utils/lazy";
 import { preloadAsset } from "@/utils/sectionActivator";
 import { useAuthStore } from "@/stores/useAuthStore";
@@ -51,19 +53,13 @@ export function installSectionActivationGuard(router) {
     const allAssets = [
       ...new Set([...assets.critical, ...assets.high, ...assets.normal]),
     ];
-    if (sectionsStore.isActivated(section)) {
-      to.meta._assetPromises = [];
-      to.meta._assetPromisesAssets = [];
-    } else {
-      const assetPromises = allAssets.map((url) => preloadAsset(url, true));
-      to.meta._assetPromises = assetPromises; // Pass to afterEach
-      to.meta._assetPromisesAssets = allAssets;
-    }
+    const assetPromises = allAssets.map((url) => preloadAsset(url, true));
+    to.meta._assetPromises = assetPromises; // Pass to afterEach
+    to.meta._assetPromisesAssets = allAssets;
     next();
   });
   router.afterEach(async (to) => {
     const section = to.meta?.section;
-    if (!section) return;
     const slug = to.meta?.slug;
     if (!section) return;
     const domReady = new Promise((resolve) => {
@@ -79,17 +75,15 @@ export function installSectionActivationGuard(router) {
 
     const sectionName = toFriendlyName(section);
     const pageName = toFriendlyName(slug);
-    console.log(`✅ Step 1: DOM content finished loading for ${pageName}`);
+    console.log(`✅ Step 1: DOM content finished loading for  ${pageName}`);
 
-    if (to.meta._assetPromises?.length > 0) {
-      await Promise.all(to.meta._assetPromises);
-      console.log(
-        `✅ Step 2: Downloaded all assets (JS, CSS, Images) for ${pageName}`
-      );
-      sectionsStore.markActivated(section);
-    } else {
-      console.log(`♻️ Skipping preload: ${pageName} already loaded`);
-    }
+    await Promise.all(to.meta._assetPromises || []);
+
+    console.log(
+      `✅ Step 2: Downloaded all assets (JS, CSS, Images) for ${pageName} → ${
+        to.meta._assetPromises?.length || 0
+      } assets [${(to.meta._assetPromisesAssets || []).join(", ")}]`
+    );
 
     const authStore = useAuthStore();
     const role =
@@ -115,7 +109,9 @@ export function installSectionActivationGuard(router) {
         }
         const { critical, high, normal } = normalizeAssets(entryModule);
         const entryAssets = [...new Set([...critical, ...high, ...normal])];
-        const entryPromises = entryAssets.map((url) => preloadAsset(url, true));
+        const entryPromises = entryAssets.map((url) =>
+          preloadAsset(url, false)
+        );
         await Promise.all(entryPromises);
         sectionsStore.markActivated(preLoadSection);
       } else {
