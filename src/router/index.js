@@ -4,7 +4,6 @@ import { lazy } from "@/utils/lazy";
 import { installSectionActivationGuard } from "./guards/sectionActivationGuard";
 import routeGuard from "./routeGuard";
 import { useAuthStore } from "@/stores/useAuthStore";
-import { useSectionsStore } from "@/stores/sections";
 
 function toRouteRecord(r) {
   const rec = {
@@ -41,51 +40,12 @@ const router = createRouter({
   routes: routeRecords,
 });
 
-let navigationStartTime;
-
-router.beforeEach((to, from, next) => {
-  navigationStartTime = performance.now();
-
-  console.log(`[ROUTE] Incoming navigation request: "${to.path}"`);
-  console.log(`[CHECK] Looking for matching route configuration...`);
-
-  const matchedRoute = routeRecords.find((r) => r.path === to.path);
-  if (!matchedRoute) {
-    console.log(`[404] No route found for "${to.path}".`);
-    return next("/404");
-  }
-
-  console.log(`[FOUND] Route configuration located for "${to.path}".`);
-  // console.log(`[CONFIG] Route metadata: ${JSON.stringify(matchedRoute.meta)}`);
-
-  next();
-});
-
-router.afterEach((to) => {
-  if (navigationStartTime !== undefined) {
-    const duration = ((performance.now() - navigationStartTime) / 1000).toFixed(
-      2
-    );
-    console.log(
-      `[DONE] Navigation to "${to.path}" finished successfully in ${duration} seconds.`
-    );
-  }
-});
-
 router.beforeEach(routeGuard);
 installSectionActivationGuard(router);
 
 router.isReady().then(() => {
   const auth = useAuthStore();
   auth.refreshFromStorage();
-  // hydrate sections store too (robustness)
-  try {
-    const sectionsStore = useSectionsStore();
-    sectionsStore.hydrate();
-  } catch (err) {
-    console.warn("[READY] Error hydrating sections store:", err);
-  }
-  console.log(`[READY] Router is ready.`);
 });
 
 export default router;
