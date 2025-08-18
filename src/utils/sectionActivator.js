@@ -5,7 +5,7 @@ import { useAuthStore } from "@/stores/useAuthStore";
 
 let bundlesManifest = null;
 const appVersion = import.meta.env.VITE_APP_VERSION || "dev";
-const preloadedAssets = new Set();
+export const preloadedAssets = new Set(); // Expose for debug commands
 
 function preloadAsset(url) {
   if (!url) {
@@ -13,46 +13,58 @@ function preloadAsset(url) {
     return Promise.resolve();
   }
   if (preloadedAssets.has(url)) {
-    console.log(`[PRELOAD] Asset already preloaded: ${url}`);
+    console.log(`[CACHE] Asset already loaded, skipping: ${url}`);
     return Promise.resolve();
   }
   preloadedAssets.add(url);
 
-  console.log(`[PRELOAD] Initiating preload for asset: ${url}`);
+  console.log(`[PRELOAD] Loading image: ${url}`);
   return new Promise((resolve, reject) => {
-    const ext = url.split(".").pop().toLowerCase();
-    const link = document.createElement("link");
-    link.rel = "preload";
+    const ext = url.split('.').pop().toLowerCase();
+    const link = document.createElement('link');
+    link.rel = 'preload';
     link.href = url;
 
-    if (["js", "mjs"].includes(ext)) {
-      link.as = "script";
-    } else if (ext === "css") {
-      link.as = "style";
-    } else if (["jpg", "jpeg", "png", "gif", "svg", "webp"].includes(ext)) {
-      link.as = "image";
+    if (['js', 'mjs'].includes(ext)) {
+      link.as = 'script';
+    } else if (ext === 'css') {
+      link.as = 'style';
+    } else if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext)) {
+      link.as = 'image';
     } else {
-      link.as = "fetch";
-      link.crossorigin = "anonymous";
+      link.as = 'fetch';
+      link.crossorigin = 'anonymous';
     }
 
     link.onload = () => {
-      console.log(`[PRELOAD] Asset loaded successfully: ${url}`);
+      console.log(`[ASSET_DOWNLOADED] Image loaded: ${url}`);
       resolve();
     };
     link.onerror = () => {
-      console.error(`[PRELOAD] Failed to preload asset: ${url}`);
+      console.error(`[ERROR] Failed to preload asset: ${url}`);
       reject(new Error(`Failed to preload asset: ${url}`));
     };
     document.head.appendChild(link);
 
-    // For images, ensure they are cached without inserting into DOM
-    if (["jpg", "jpeg", "png", "gif", "svg", "webp"].includes(ext)) {
+    if (ext === 'css') {
+      const styleLink = document.createElement('link');
+      styleLink.rel = 'stylesheet';
+      styleLink.href = url;
+      styleLink.onload = () => console.log(`[ASSET_APPLIED] Stylesheet applied: ${url}`);
+      styleLink.onerror = () => console.error(`[ASSET_APPLIED] Failed to apply stylesheet: ${url}`);
+      document.head.appendChild(styleLink);
+    } else if (['js', 'mjs'].includes(ext)) {
+      const script = document.createElement('script');
+      script.src = url;
+      script.defer = true;
+      script.onload = () => console.log(`[ASSET_APPLIED] Script executed: ${url}`);
+      script.onerror = () => console.error(`[ASSET_APPLIED] Failed to load script: ${url}`);
+      document.head.appendChild(script);
+    } else if (['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp'].includes(ext)) {
       const img = new Image();
       img.src = url;
-      img.onload = () => console.log(`[PRELOAD] Image cached: ${url}`);
-      img.onerror = () =>
-        console.error(`[PRELOAD] Failed to cache image: ${url}`);
+      img.onload = () => console.log(`[ASSET_APPLIED] Image loaded into DOM: ${url}`);
+      img.onerror = () => console.error(`[ASSET_APPLIED] Failed to load image: ${url}`);
     }
   });
 }
@@ -74,9 +86,7 @@ async function loadManifest() {
     console.log("[MANIFEST] Manifest loaded successfully");
     return bundlesManifest;
   } catch (e) {
-    console.error(
-      `[MANIFEST] Failed to load section-bundles.json: ${e.message}`
-    );
+    console.error(`[MANIFEST] Failed to load section-bundles.json: ${e.message}`);
     return {};
   }
 }
@@ -84,10 +94,10 @@ async function loadManifest() {
 export function isSectionActivated(section) {
   const store = useSectionsStore();
   if (store.isActivated(section)) {
-    console.log(`[CACHE_HIT] Section "${section}" is already preloaded.`);
+    console.log(`[CACHE] Section "${section}" already cached`);
     return true;
   }
-  console.log(`[CACHE] Section "${section}" not preloaded yet.`);
+  console.log(`[CACHE] Section "${section}" not cached yet — will need to preload/lazy load.`);
   return false;
 }
 
@@ -95,33 +105,26 @@ export async function activateSection(section) {
   const startTime = performance.now();
   const store = useSectionsStore();
   if (store.isActivated(section)) {
-    console.log(
-      `[CACHE_HIT] Section "${section}" already activated. Skipping preload.`
-    );
+    console.log(`[CACHE] Section "${section}" already cached`);
     return true;
   }
 
-  console.log(`[PRELOAD] Starting activation for section "${section}"`);
+  console.log(`[SECTION] Activating section: ${section}`);
+  performance.mark('section-start');
 
   // Load section bundle
   const manifest = await loadManifest();
   const url = manifest[section];
   if (url) {
-    const importUrl = import.meta.env.DEV
-      ? url.replace("/assets/", "/public/assets/")
-      : url;
+    const importUrl = import.meta.env.DEV ? url.replace("/assets/", "/public/assets/") : url;
     const versionedUrl = `${importUrl}?ver=${appVersion}`;
-    console.log(
-      `[PRELOAD] Preloading section bundle "${section}" from: ${versionedUrl}`
-    );
+    console.log(`[SECTION] Preloading section bundle "${section}" from: ${versionedUrl}`);
     try {
       await import(/* @vite-ignore */ versionedUrl);
-      console.log(`[DONE] Section "${section}" bundle loaded successfully.`);
+      console.log(`[SECTION] Section "${section}" bundle loaded successfully.`);
       console.log(`[ASSET_DOWNLOADED] ${versionedUrl}`);
     } catch (e) {
-      console.error(
-        `[ERROR] Failed to preload section bundle "${section}": ${e.message}`
-      );
+      console.error(`[ERROR] Failed to preload section bundle "${section}": ${e.message}`);
       return false;
     }
   } else {
@@ -129,16 +132,14 @@ export async function activateSection(section) {
   }
 
   // Collect and preload component-specific assets
-  const routesInSection = routesJson.filter((r) => r.section === section);
+  const routesInSection = routesJson.filter(r => r.section === section);
   const allAssets = { critical: new Set(), high: new Set(), normal: new Set() };
   const auth = useAuthStore();
   const role = auth.simulate?.role || auth.currentUser?.role || "creator";
 
   const componentPromises = [];
   for (const route of routesInSection) {
-    console.log(
-      `[PRELOAD] Processing route "${route.slug}" in section "${section}"`
-    );
+    console.log(`[PRELOAD] Processing route "${route.slug}" in section "${section}"`);
     let compPath = route.componentPath;
     if (route.customComponentPath) {
       compPath = route.customComponentPath[role]?.componentPath;
@@ -148,30 +149,27 @@ export async function activateSection(section) {
       continue;
     }
 
-    console.log(`[PRELOAD] Loading component for "${route.slug}": ${compPath}`);
+    console.log(`[COMPONENT] Loading component: ${route.slug}`);
     componentPromises.push(
       lazy(compPath)()
         .then((compModule) => {
-          console.log(`[PRELOAD] Component loaded for "${route.slug}"`);
+          console.log(`[COMPONENT] Component loaded: ${route.slug}`);
           const assets = compModule.assets || {};
-          console.log(
-            `[ASSET] Assets declared for "${route.slug}":`,
-            JSON.stringify(assets)
-          );
-          ["critical", "high", "normal"].forEach((prio) => {
-            (assets[prio] || []).forEach((url) => {
-              allAssets[prio].add(url);
-              console.log(
-                `[ASSET] Queued ${prio} asset for "${route.slug}": ${url}`
-              );
+          console.log(`[ASSET] Component has ${Object.values(assets).flat().length} images to preload`);
+          ['critical', 'high', 'normal'].forEach(prio => {
+            (assets[prio] || []).forEach(url => {
+              if (!preloadedAssets.has(url)) {
+                allAssets[prio].add(url);
+                console.log(`[ASSET] Queued ${prio} asset for "${route.slug}": ${url}`);
+              } else {
+                console.log(`[CACHE] Asset already loaded, skipping: ${url}`);
+              }
             });
           });
           return compModule;
         })
         .catch((e) => {
-          console.error(
-            `[ERROR] Failed to load component for "${route.slug}": ${e.message}`
-          );
+          console.error(`[ERROR] Failed to load component for "${route.slug}": ${e.message}`);
           return null;
         })
     );
@@ -181,52 +179,43 @@ export async function activateSection(section) {
   await Promise.all(componentPromises);
 
   // Wait for DOM to be fully loaded
-  await new Promise((resolve) => {
-    if (document.readyState === "complete") {
-      console.log(
-        "[DOM] Document already fully loaded, proceeding with asset preload"
-      );
+  console.log("[DOM] Waiting for DOM to be ready...");
+  await new Promise(resolve => {
+    if (document.readyState === 'complete') {
+      console.log("[DOM] DOM is ready, proceeding with section activation");
+      performance.mark('dom-ready');
       resolve();
     } else {
-      window.addEventListener(
-        "load",
-        () => {
-          console.log(
-            "[DOM] Document fully loaded, proceeding with asset preload"
-          );
-          resolve();
-        },
-        { once: true }
-      );
+      window.addEventListener('load', () => {
+        console.log("[DOM] DOM is ready, proceeding with section activation");
+        performance.mark('dom-ready');
+        resolve();
+      }, { once: true });
     }
   });
 
   // Preload assets in priority order
+  performance.mark('preload-start');
   const assetPromises = [];
-  ["critical", "high", "normal"].forEach((prio) => {
-    allAssets[prio].forEach((url) => {
+  ['critical', 'high', 'normal'].forEach(prio => {
+    allAssets[prio].forEach(url => {
       console.log(`[ASSET] Preloading ${prio} asset: ${url}`);
       assetPromises.push(preloadAsset(url));
     });
   });
 
   // Wait for all assets to preload
-  await Promise.allSettled(assetPromises).then((results) => {
+  await Promise.allSettled(assetPromises).then(results => {
     results.forEach((result, index) => {
-      if (result.status === "rejected") {
-        console.error(`[ASSET] Failed to preload asset: ${result.reason}`);
+      if (result.status === 'rejected') {
+        console.error(`[ERROR] Failed to preload asset: ${result.reason}`);
       }
     });
   });
 
   store.markActivated(section);
-  console.log(
-    `[DONE] All assets for section "${section}" downloaded and cached.`
-  );
+  console.log(`[SECTION] Section ${section} activated in ${(performance.now() - startTime).toFixed(2)}ms.`);
   console.log(`[Callback] Assets and route completed for "${section}"`);
-
-  const duration = (performance.now() - startTime).toFixed(2);
-  console.log(`[DONE] Preload "${section}" completed in ${duration}ms.`);
 
   return true;
 }

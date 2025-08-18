@@ -19,11 +19,7 @@ function toRouteRecord(r) {
       const auth = useAuthStore();
       const role = auth.simulate?.role || auth.currentUser?.role || "default";
       const compPath = r.customComponentPath[role]?.componentPath;
-      console.log(
-        `[ROUTE] Resolving component for "${r.slug}" with role "${role}": ${
-          compPath || "NotFound"
-        }`
-      );
+      console.log(`[ROUTE] Resolving component for "${r.slug}" with role "${role}": ${compPath || 'NotFound'}`);
       return compPath ? lazy(compPath)() : import("@/components/NotFound.vue");
     };
   } else {
@@ -46,9 +42,7 @@ let navigationStartTime;
 router.beforeEach((to, from, next) => {
   const store = useSectionsStore();
   store.hydrate(import.meta.env.VITE_APP_VERSION || "dev");
-  console.log(
-    `[ROUTER] Hydrated sections store for navigation to "${to.path}"`
-  );
+  console.log(`[ROUTER] Hydrated sections store for navigation to "${to.path}"`);
   next();
 });
 
@@ -68,25 +62,14 @@ router.beforeEach((to, from, next) => {
   console.log(`[FOUND] Route configuration located for "${to.path}".`);
   console.log(`[CONFIG] Route metadata: ${JSON.stringify(matchedRoute.meta)}`);
 
-  const section = matchedRoute.meta?.section;
-  if (section) {
-    console.log(
-      `[SECTION] Route "${to.path}" belongs to section "${section}".`
-    );
-  } else {
-    console.log(`[SECTION] Route "${to.path}" does not specify a section.`);
-  }
-
   next();
 });
 
 router.afterEach((to) => {
-  const duration = ((performance.now() - navigationStartTime) / 1000).toFixed(
-    2
-  );
-  console.log(
-    `[DONE] Navigation to "${to.path}" finished successfully in ${duration} seconds.`
-  );
+  if (navigationStartTime !== undefined) {
+    const duration = ((performance.now() - navigationStartTime) / 1000).toFixed(2);
+    console.log(`[DONE] Navigation to "${to.path}" finished successfully in ${duration} seconds.`);
+  }
 });
 
 router.beforeEach(routeGuard);
