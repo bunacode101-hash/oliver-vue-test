@@ -1,9 +1,8 @@
+// stores/sectionStore.js
 import { defineStore } from "pinia";
-
 const LS_KEY = "sectionsActivated";
 const LS_VER_KEY = "sectionsActivatedVersion";
 const appVersion = import.meta.env.VITE_APP_VERSION || "dev";
-
 export const useSectionsStore = defineStore("sections", {
   state: () => ({
     activated: {

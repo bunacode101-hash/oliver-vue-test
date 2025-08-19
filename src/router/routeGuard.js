@@ -3,7 +3,7 @@ import { useAuthStore } from "@/stores/useAuthStore";
 export default async function routeGuard(to, from, next) {
   const auth = useAuthStore();
   const role = auth.simulate?.role || auth.currentUser?.role || "default";
-  console.log(`[GUARD] Checking route "${to.path}" for role "${role}"`);
+  // console.log(`[GUARD] Checking route "${to.path}" for role "${role}"`);
 
   // Handle requiresAuth
   if (to.meta.requiresAuth && !auth.isAuthenticated) {

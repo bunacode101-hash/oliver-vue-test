@@ -1,7 +1,6 @@
 // router/guard/sectionActivationGuard.js
-
 import { lazy } from "@/utils/lazy";
-import { preloadAsset } from "@/utils/sectionActivator";
+import { preloadAsset, preloadAssets } from "@/utils/sectionActivator";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { useSectionsStore } from "@/stores/sectionStore";
 import routesJson from "@/router/routeConfig.json";
@@ -19,9 +18,13 @@ function getCompPath(route, role) {
     route.customComponentPath?.[role]?.componentPath || route.componentPath
   );
 }
+
 function getEntryForSection(section, role) {
   const sectionRoutes = routesJson.filter(
     (r) => r.section === section && !r.redirect
+  );
+  console.log(
+    `[SECTION] Found ${sectionRoutes.length} routes for section "${section}"`
   );
   let entryRoute =
     sectionRoutes.find((r) => !r.inheritConfigFromParent) || sectionRoutes[0];
@@ -30,99 +33,209 @@ function getEntryForSection(section, role) {
   }
   return getCompPath(entryRoute, role);
 }
+
 export function installSectionActivationGuard(router) {
+  async function preloadSection(section, role, apply = false) {
+    console.log(`➡️ Preloading section "${section}" (apply=${apply})`);
+    const startTime = performance.now();
+    const sectionRoutes = routesJson.filter(
+      (r) => r.section === section && !r.redirect
+    );
+    console.log(
+      `[SECTION] Found ${
+        sectionRoutes.length
+      } routes to preload in section "${section}": ${sectionRoutes
+        .map((r) => r.slug)
+        .join(", ")}`
+    );
+    const allAssets = new Set();
+    const componentPromises = sectionRoutes.map(async (route) => {
+      const compPath = getCompPath(route, role);
+      if (!compPath) {
+        console.warn(
+          `[COMPONENT] No component path for route "${route.slug}" in section "${section}"`
+        );
+        return;
+      }
+      // console.log(
+      //   `[COMPONENT] Loading component for route "${route.slug}" in section "${section}": ${compPath}`
+      // );
+      try {
+        const mod = await lazy(compPath)();
+        // console.log(`[COMPONENT] Loaded component for "${route.slug}"`);
+        const assets = normalizeAssets(mod);
+        [...assets.critical, ...assets.high, ...assets.normal].forEach((url) =>
+          allAssets.add(url)
+        );
+      } catch (err) {
+        console.error(
+          `[ERROR] Failed to load component for "${route.slug}"`,
+          err
+        );
+      }
+    });
+    await Promise.all(componentPromises);
+    const assetList = [...allAssets];
+    console.log(
+      `[ASSETS] Total unique assets for section "${section}": ${
+        assetList.length
+      } [${assetList.join(", ")}]`
+    );
+    await preloadAssets(assetList, apply);
+    const duration = performance.now() - startTime;
+    console.log(
+      `✅ Preloaded section "${section}" in ${duration.toFixed(2)}ms`
+    );
+  }
+
   router.beforeEach(async (to, from, next) => {
     const section = to.meta?.section;
-    if (!section) return next();
+    const slug = to.meta?.slug;
+    if (!section) {
+      console.log(`[ROUTING] No section defined for route "${to.path}"`);
+      return next();
+    }
     const sectionsStore = useSectionsStore();
     sectionsStore.hydrate();
     const authStore = useAuthStore();
     const role =
       authStore.simulate?.role || authStore.currentUser?.role || "creator";
+    // console.log(
+    //   `[ROUTING] Checking route "${to.path}", section "${section}", role "${role}"`
+    // );
     const compPath = getCompPath(to.meta, role);
     if (!compPath) {
+      console.log(
+        `[ROUTING] No component path for "${to.path}", redirecting to /404`
+      );
       return next("/404");
     }
     let compModule;
     try {
+      // console.log(
+      //   `[COMPONENT] Loading current component for "${slug}": ${compPath}`
+      // );
       compModule = await lazy(compPath)();
+      // console.log(`[COMPONENT] Loaded current component for "${slug}"`);
+      // console.log(`[TEMPLATE] Vue template ready for "${slug}"`);
     } catch (e) {
+      console.error(`[ERROR] Failed to load component for "${slug}"`, e);
       return next("/404");
     }
     const assets = compModule.assets || { critical: [], high: [], normal: [] };
     const allAssets = [
       ...new Set([...assets.critical, ...assets.high, ...assets.normal]),
     ];
-    const assetPromises = allAssets.map((url) => preloadAsset(url, true));
-    to.meta._assetPromises = assetPromises; // Pass to afterEach
-    to.meta._assetPromisesAssets = allAssets;
+    // console.log(
+    //   `[ASSETS] Assets for current "${slug}": ${JSON.stringify(assets)}`
+    // );
+    // console.log(
+    //   `[ASSETS] Total unique assets for current: ${
+    //     allAssets.length
+    //   } [${allAssets.join(", ")}]`
+    // );
+    to.meta._assetPromise = preloadAssets(allAssets, true);
     next();
   });
+
   router.afterEach(async (to) => {
     const section = to.meta?.section;
     const slug = to.meta?.slug;
     if (!section) return;
-    const domReady = new Promise((resolve) => {
-      if (
-        document.readyState === "interactive" ||
-        document.readyState === "complete"
-      )
+    const routingStartTime = performance.now();
+    // console.log(
+    //   `\n[ROUTING] Section activation for "${section}" (route "${to.path}")`
+    // );
+    const fullLoad = new Promise((resolve) => {
+      if (document.readyState === "complete") {
+        // console.log(
+        //   `[DOM] Document already fully loaded for "${toFriendlyName(slug)}"`
+        // );
         resolve();
-      else
-        document.addEventListener("DOMContentLoaded", resolve, { once: true });
+      } else {
+        window.addEventListener(
+          "load",
+          () => {
+            console.log(
+              `[DOM] Document fully loaded for "${toFriendlyName(slug)}"`
+            );
+            resolve();
+          },
+          { once: true }
+        );
+      }
     });
-    await domReady;
-
-    const sectionName = toFriendlyName(section);
-    const pageName = toFriendlyName(slug);
-    console.log(`✅ Step 1: DOM content finished loading for  ${pageName}`);
-
-    await Promise.all(to.meta._assetPromises || []);
-
     console.log(
-      `✅ Step 2: Downloaded all assets (JS, CSS, Images) for ${pageName} → ${
-        to.meta._assetPromises?.length || 0
-      } assets [${(to.meta._assetPromisesAssets || []).join(", ")}]`
+      `✅ Step 1: Waiting for full page load for "${toFriendlyName(slug)}"`
     );
-
+    await fullLoad;
+    console.log(
+      `✅ Step 1: Full page load complete for "${toFriendlyName(slug)}"`
+    );
+    console.log(
+      `✅ Step 2: Waiting for current assets apply for "${toFriendlyName(
+        slug
+      )}"`
+    );
+    await to.meta._assetPromise;
+    console.log(
+      `✅ Step 2: Applied all current assets for "${toFriendlyName(slug)}"`
+    );
     const authStore = useAuthStore();
     const role =
       authStore.simulate?.role || authStore.currentUser?.role || "creator";
-    const preLoadSection = to.meta.preLoadSections?.[0];
     const sectionsStore = useSectionsStore();
-    if (preLoadSection) {
-      if (!sectionsStore.isActivated(preLoadSection)) {
-        const sectionName = toFriendlyName(preLoadSection);
-        console.log(`➡️ Step 3: Preloading next section: ${sectionName}`);
-
-        const entryComp = getEntryForSection(preLoadSection, role);
-        if (!entryComp) return;
-        let entryModule;
-        try {
-          entryModule = await lazy(entryComp)();
-        } catch (err) {
-          console.error(
-            `Failed to preload bundle for section "${preLoadSection}"`,
-            err
-          );
-          return;
-        }
-        const { critical, high, normal } = normalizeAssets(entryModule);
-        const entryAssets = [...new Set([...critical, ...high, ...normal])];
-        const entryPromises = entryAssets.map((url) =>
-          preloadAsset(url, false)
-        );
-        await Promise.all(entryPromises);
-        sectionsStore.markActivated(preLoadSection);
-      } else {
-        const sectionName = toFriendlyName(preLoadSection);
-        console.log(`♻️ Skipping preload: ${sectionName} already loaded`);
-      }
+    if (!sectionsStore.isActivated(section)) {
+      console.log(
+        `➡️ Step 3: Preloading current section "${toFriendlyName(
+          section
+        )}" (not activated)`
+      );
+      await preloadSection(section, role, false);
+      sectionsStore.markActivated(section);
+    } else {
+      console.log(
+        `♻️ Step 3: Skipping current section "${toFriendlyName(
+          section
+        )}" (already activated)`
+      );
     }
-
-    console.log(`✨ Done: ${pageName} fully ready`);
+    let preLoadSections = to.meta.preLoadSections || [];
+    preLoadSections = [...new Set([...preLoadSections, "auth"])].filter(
+      (s) => s !== section
+    );
+    if (preLoadSections.length > 0) {
+      console.log(
+        `➡️ Step 4: Preloading config sections (including auth): ${preLoadSections
+          .map(toFriendlyName)
+          .join(", ")}`
+      );
+      for (const preSection of preLoadSections) {
+        if (!sectionsStore.isActivated(preSection)) {
+          console.log(`➡️ Preloading section "${toFriendlyName(preSection)}"`);
+          await preloadSection(preSection, role, false);
+          sectionsStore.markActivated(preSection);
+          console.log(`✅ Preloaded section "${toFriendlyName(preSection)}"`);
+        } else {
+          console.log(
+            `♻️ Skipping preload for "${toFriendlyName(
+              preSection
+            )}" (already activated)`
+          );
+        }
+      }
+    } else {
+      console.log(`♻️ No additional sections to preload`);
+    }
+    const totalDuration = (performance.now() - routingStartTime).toFixed(2);
+    console.log(
+      `✨ Done: "${toFriendlyName(
+        slug
+      )}" fully ready (total ${totalDuration}ms)`
+    );
   });
 }
+
 function normalizeAssets(mod) {
   return mod.assets || { critical: [], high: [], normal: [] };
 }

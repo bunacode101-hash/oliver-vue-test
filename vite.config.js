@@ -3,7 +3,6 @@ import { fileURLToPath, URL } from "node:url";
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import vueDevTools from "vite-plugin-vue-devtools";
-import tailwindcss from "@tailwindcss/vite";
 import fs from "fs-extra";
 import { join } from "path";
 
@@ -37,7 +36,7 @@ async function generateManifest() {
 
 export default defineConfig(({ mode }) => {
   return {
-    plugins: [vue(), vueDevTools(), tailwindcss()],
+    plugins: [vue(), vueDevTools()],
     resolve: {
       alias: {
         "@": fileURLToPath(new URL("./src", import.meta.url)),
