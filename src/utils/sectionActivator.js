@@ -1,49 +1,50 @@
-// utils/sectionActivator.js
 export const preloadedAssets = new Map();
 export const appliedAssets = new Set();
 
 function getDomain(url) {
   try {
-    const fullUrl = url.startsWith("http")
-      ? url
-      : new URL(url, location.href).href;
+    const fullUrl = url.startsWith('http') ? url : new URL(url, location.href).href;
     return new URL(fullUrl).hostname;
   } catch {
-    return location.hostname; // Fallback for invalid URLs
+    return location.hostname;
   }
 }
 
 async function limitConcurrency(arr, fn, limit) {
   const running = [];
   const results = [];
-  for (let i = 0; i < arr.length; i++) {
+  for (const item of arr) {
     if (running.length >= limit) {
       await Promise.race(running);
     }
-    const p = fn(arr[i]).finally(() => {
+    const p = fn(item).finally(() => {
       const index = running.indexOf(p);
       if (index !== -1) running.splice(index, 1);
     });
     running.push(p);
-    results[i] = p;
+    results.push(p);
   }
   return Promise.all(results);
 }
 
+export async function isSectionActivated(section) {
+  const { useSectionsStore } = await import("@/stores/sectionStore");
+  const sectionsStore = useSectionsStore();
+  const activated = sectionsStore.isActivated(section);
+  if (activated) {
+    console.log(`[CACHE_HIT] Section "${section}" is already preloaded.`);
+    return true;
+  }
+  console.log(`[CACHE] Section "${section}" not cached yet.`);
+  return false;
+}
+
 export async function preloadAssets(urls, apply) {
   if (urls.length === 0) {
-    console.log(
-      `[ASSETS] No assets to ${
-        apply ? "preload and apply" : "prefetch"
-      } (apply=${apply})`
-    );
+    console.log(`[ASSETS] No assets to ${apply ? 'preload and apply' : 'prefetch'} (apply=${apply})`);
     return;
   }
-  // console.log(
-  //   `[ASSETS] Starting limited ${apply ? "preload" : "prefetch"} for ${
-  //     urls.length
-  //   } assets (apply=${apply}, limit=5 per domain)`
-  // );
+  console.log(`[ASSETS] Starting limited ${apply ? 'preload' : 'prefetch'} for ${urls.length} assets (apply=${apply}, limit=5 per domain)`);
   const groups = {};
   urls.forEach((url) => {
     const domain = getDomain(url);
@@ -52,39 +53,23 @@ export async function preloadAssets(urls, apply) {
   });
   const groupPromises = [];
   for (const domain in groups) {
-    // console.log(
-    //   `[DOMAIN] ${apply ? "Preloading" : "Prefetching"} ${
-    //     groups[domain].length
-    //   } assets for domain "${domain}": ${groups[domain].join(", ")}`
-    // );
-    groupPromises.push(
-      limitConcurrency(groups[domain], (url) => preloadAsset(url, apply), 5)
-    );
+    console.log(`[DOMAIN] ${apply ? 'Preloading' : 'Prefetching'} ${groups[domain].length} assets for domain "${domain}": ${groups[domain].join(", ")}`);
+    groupPromises.push(limitConcurrency(groups[domain], (url) => preloadAsset(url, apply), 5));
   }
   await Promise.all(groupPromises);
-  console.log(
-    `[ASSETS] Completed limited ${
-      apply ? "preload" : "prefetch"
-    } for all assets`
-  );
+  console.log(`[ASSETS] Completed limited ${apply ? 'preload' : 'prefetch'} for all assets`);
 }
 
 export function preloadAsset(url, apply = false) {
   if (!url) {
-    console.warn(
-      `[${apply ? "PRELOAD" : "PREFETCH"}] Skipping invalid asset URL: ${url}`
-    );
+    console.warn(`[${apply ? 'PRELOAD' : 'PREFETCH'}] Skipping invalid asset URL: ${url}`);
     return Promise.resolve();
   }
   if (apply && appliedAssets.has(url)) {
     console.log(`[Loader] Already loaded; skipping: ${url}`);
     return Promise.resolve();
   }
-  // console.log(
-  //   `[${apply ? "PRELOAD" : "PREFETCH"}] Initiating ${
-  //     apply ? "preload" : "prefetch"
-  //   } for ${url}`
-  // );
+  console.log(`[${apply ? 'PRELOAD' : 'PREFETCH'}] Initiating ${apply ? 'preload' : 'prefetch'} for ${url}`);
   const ext = url.split(".").pop().toLowerCase();
   let preloadPromise = preloadedAssets.get(url);
   if (!preloadPromise) {
@@ -100,22 +85,13 @@ export function preloadAsset(url, apply = false) {
         link.as = "image";
       }
       link.onload = () => {
-        console.log(
-          `[${apply ? "PRELOAD" : "PREFETCH"}] Completed ${
-            apply ? "preload" : "prefetch"
-          } for ${url}`
-        );
+        console.log(`[${apply ? 'PRELOAD' : 'PREFETCH'}] Completed ${apply ? 'preload' : 'prefetch'} for ${url}`);
         resolve();
       };
       link.onerror = reject;
       document.head.appendChild(link);
     }).catch((err) => {
-      console.error(
-        `[${apply ? "PRELOAD" : "PREFETCH"}] Failed to ${
-          apply ? "preload" : "prefetch"
-        } ${url}`,
-        err
-      );
+      console.error(`[${apply ? 'PRELOAD' : 'PREFETCH'}] Failed to ${apply ? 'preload' : 'prefetch'} ${url}`, err);
       preloadedAssets.delete(url);
       throw err;
     });

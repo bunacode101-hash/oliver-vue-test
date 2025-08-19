@@ -1,18 +1,19 @@
-import { createApp } from "vue";
-import { createPinia } from "pinia";
-import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
-
-import App from "./App.vue";
-import router from "./router";
-import "./assets/main.css";
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import App from './App.vue';
+import router from './router';
+import { useAuthStore } from './stores/useAuthStore';
+import { useSectionsStore } from './stores/sectionStore';
 
 const app = createApp(App);
-
-app.use(createPinia());
+const pinia = createPinia();
+app.use(pinia);
 app.use(router);
 
-if (import.meta.env?.MODE === "eager") {
-  await import("./eager");
-}
+// Initialize stores after Pinia is set up
+const authStore = useAuthStore();
+const sectionsStore = useSectionsStore();
+authStore.refreshFromStorage();
+sectionsStore.hydrate();
 
-app.mount("#app");
+app.mount('#app');
