@@ -32,7 +32,9 @@ function toRouteRecord(r) {
         );
         r._cachedCompPath = compPath || "@/components/NotFound.vue";
       }
-      const component = compPath ? await lazy(compPath)() : await import("@/components/NotFound.vue");
+      const component = compPath
+        ? await lazy(compPath)()
+        : await import("@/components/NotFound.vue");
       componentCache.set(cacheKey, component);
       return component;
     };
@@ -42,7 +44,9 @@ function toRouteRecord(r) {
       if (componentCache.has(cacheKey)) {
         return componentCache.get(cacheKey);
       }
-      const component = r.componentPath ? await lazy(r.componentPath)() : await import("@/components/NotFound.vue");
+      const component = r.componentPath
+        ? await lazy(r.componentPath)()
+        : await import("@/components/NotFound.vue");
       componentCache.set(cacheKey, component);
       return component;
     };
@@ -72,7 +76,9 @@ router.beforeEach((to, from, next) => {
   console.log(`[CONFIG] Route metadata: ${JSON.stringify(matchedRoute.meta)}`);
   const section = matchedRoute.meta?.section;
   if (section) {
-    console.log(`[SECTION] Route "${to.path}" belongs to section "${section}".`);
+    console.log(
+      `[SECTION] Route "${to.path}" belongs to section "${section}".`
+    );
   } else {
     console.log(`[SECTION] Route "${to.path}" does not specify a section.`);
   }

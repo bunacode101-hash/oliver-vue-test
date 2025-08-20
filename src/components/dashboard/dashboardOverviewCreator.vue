@@ -1,19 +1,10 @@
-<script setup></script>
-
-<script>
-export const assets = {
-  critical: ["/css/dashboard.css"],
-  high: ["/js/vendor-charts.js"],
-  normal: ["/images/image2.jpg"],
-};
-</script>
-
 <template>
-  <section class="dashboard-overview-creator">
-    <h2>Creator Dashboard Overview</h2>
-    <p>Creator-specific dashboard content.</p>
-    
-    <nav style="margin-top: 1rem; display: flex; gap: 1rem">
+  <div>
+    <h1>Creator Dashboard</h1>
+    <p>Welcome, {{ authStore.currentUser?.email }}!</p>
+    <button @click="logout">Logout</button>
+
+    <!-- <nav style="margin-top: 1rem; display: flex; gap: 1rem">
       <router-link to="/dashboard/edit-profile">
         <button
           style="
@@ -56,14 +47,29 @@ export const assets = {
           My Media
         </button>
       </router-link>
-    </nav>
-    <!-- <img
-      src="/images/image2.jpg"
-      alt="Dashboard Image"
-      style="width: 100%; height: auto"
-    /> -->
-  </section>
+    </nav> -->
+  </div>
 </template>
+
+<script setup>
+import { useAuthStore } from "@/stores/useAuthStore";
+import { authHandler } from "@/services/authHandler";
+import { useRouter } from "vue-router";
+
+const authStore = useAuthStore();
+const router = useRouter();
+
+function logout() {
+  authStore.logout();
+  router.push("/log-in");
+}
+
+const assets = {
+  critical: ["/css/dashboard.css"],
+  high: ["/js/vendor-charts.js"],
+  normal: ["/images/image2.jpg"],
+};
+</script>
 
 <style scoped>
 /* Ensure CSS is applied */

@@ -39,3 +39,4 @@ coverage
 
 public/assets
 public/section-bundles.json
+.env

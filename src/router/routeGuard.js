@@ -1,41 +1,71 @@
 import { useAuthStore } from "@/stores/useAuthStore";
+import routesJson from "@/router/routeConfig.json";
 
-export default async function routeGuard(to, from, next) {
+function getRouteBySlug(path) {
+  return routesJson.find(
+    (route) =>
+      route.slug === path ||
+      (route.dynamicRoute &&
+        route.slug.includes("/:") &&
+        path.match(new RegExp(route.slug.replace(/:[^/]+/g, "[^/]+"))))
+  );
+}
+
+function getParentRouteDeps(path) {
+  const segments = path.split("/");
+  const parents = [];
+  while (segments.length > 1) {
+    segments.pop();
+    const parentPath = segments.join("/") || "/";
+    const parent = getRouteBySlug(parentPath);
+    if (parent?.inheritConfigFromParent) parents.push(parent);
+  }
+  return parents.reverse();
+}
+
+export default function routeGuard(to, from, next) {
+  const route = getRouteBySlug(to.path);
   const auth = useAuthStore();
-  const role = auth.simulate?.role || auth.currentUser?.role || "default";
-  // console.log(`[GUARD] Checking route "${to.path}" for role "${role}"`);
+  const user = auth.simulate || auth.currentUser;
 
-  // Handle requiresAuth
-  if (to.meta.requiresAuth && !auth.isAuthenticated) {
-    console.log(`[GUARD] Route "${to.path}" requires authentication. Redirecting to "${to.meta.redirectIfNotAuth || '/log-in'}".`);
-    return next(to.meta.redirectIfNotAuth || "/log-in");
+  // Check if token expired
+  const now = Math.floor(Date.now() / 1000);
+  if (user?.raw?.exp && now >= user.raw.exp) {
+    auth.logout();
+    return next("/log-in");
   }
 
-  // Handle redirectIfLoggedIn
-  if (to.meta.redirectIfLoggedIn && auth.isAuthenticated) {
-    console.log(`[GUARD] User is authenticated. Redirecting from "${to.path}" to "${to.meta.redirectIfLoggedIn}".`);
-    return next(to.meta.redirectIfLoggedIn);
+  if (!route) return next("/404");
+  if (route.redirectIfLoggedIn && user) return next(route.redirectIfLoggedIn);
+  if (route.requiresAuth && !user)
+    return next(route.redirectIfNotAuth || "/log-in");
+
+  if (
+    route.supportedRoles?.length &&
+    !["any", "all"].includes(route.supportedRoles[0]) &&
+    !route.supportedRoles.includes(user?.role)
+  ) {
+    return next("/dashboard");
   }
 
-  // Handle supportedRoles
-  if (to.meta.supportedRoles && to.meta.supportedRoles.length > 0) {
-    if (!to.meta.supportedRoles.includes("any") && !to.meta.supportedRoles.includes(role)) {
-      console.log(`[GUARD] Role "${role}" not supported for "${to.path}". Redirecting to /404.`);
-      return next("/404");
+  const parentDeps = getParentRouteDeps(to.path);
+  const allDeps = [...parentDeps, route];
+
+  for (const r of allDeps) {
+    const deps = r.dependencies || {};
+    const roleDeps = deps.roles?.[user?.role] || {};
+
+    for (const [key, val] of Object.entries(roleDeps)) {
+      if (val?.required && !user?.[key])
+        return next(val.fallbackSlug || "/404");
     }
-  }
 
-  // Handle role-specific dependencies
-  if (to.meta.dependencies?.roles?.[role]) {
-    const deps = to.meta.dependencies.roles[role];
-    for (const [key, { required, fallbackSlug }] of Object.entries(deps)) {
-      if (required && !auth.simulate?.[key] && !auth.currentUser?.[key]) {
-        console.log(`[GUARD] Dependency "${key}" not met for role "${role}" on "${to.path}". Redirecting to "${fallbackSlug}".`);
-        return next(fallbackSlug);
+    for (const [key, val] of Object.entries(deps)) {
+      if (key !== "roles" && val?.required && !user?.[key]) {
+        return next(val.fallbackSlug || "/404");
       }
     }
   }
 
-  console.log(`[GUARD] Route "${to.path}" access granted for role "${role}".`);
   next();
 }
