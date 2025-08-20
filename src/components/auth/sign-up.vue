@@ -2,6 +2,7 @@
   <div>
     <h1>Sign Up</h1>
     <form @submit.prevent="handleSignUp">
+      <input v-model="name" type="text" placeholder="Name" required /> <!-- Added: Required by Cognito -->
       <input v-model="email" type="email" placeholder="Email" required />
       <input
         v-model="password"
@@ -27,12 +28,13 @@ import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/useAuthStore";
 import { authHandler } from "@/services/authHandler";
 
+const name = ref(""); // Added: Required attribute
 const email = ref("");
 const password = ref("");
 const role = ref("creator");
 const error = ref("");
 const router = useRouter();
-const authStore = useAuthStore();
+const authStore = useAuthStore(); // Not used in sign-up, but kept for consistency
 
 async function handleSignUp() {
   try {
@@ -41,6 +43,7 @@ async function handleSignUp() {
       role: role.value,
     });
     await authHandler.register(email.value, password.value, {
+      name: name.value, // Added: Required
       "custom:role": role.value,
       "custom:onboardingPassed": "false",
       "custom:kycPassed": "false",
@@ -53,14 +56,8 @@ async function handleSignUp() {
     error.value = err.message || "Sign up failed";
   }
 }
-
-const assets = {
-  critical: ["/css/auth.css"],
-  high: [],
-  normal: ["/images/auth-bg.jpg"],
-};
 </script>
 
 <style scoped>
-@import "../../assets/css/auth.css";
+/* Your styles */
 </style>

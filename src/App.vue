@@ -24,11 +24,11 @@ const auth = useAuthStore();
         Dashboard
       </button>
     </router-link>
-    <router-link to="/profile">
+    <!-- <router-link to="/profile">
       <button style="padding: 0.5rem 1rem; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
         Profile
       </button>
-    </router-link>
+    </router-link> -->
     <router-link to="/discover">
       <button style="padding: 0.5rem 1rem; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
         Discover

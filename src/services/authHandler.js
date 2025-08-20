@@ -1,143 +1,148 @@
 import {
-  signUp,
-  confirmSignUp,
-  signIn,
-  signOut,
-  updatePassword,
-  resetPassword,
-  confirmResetPassword,
-  updateUserAttributes,
-  fetchAuthSession,
-  getCurrentUser,
-} from "aws-amplify/auth";
+  CognitoUserPool,
+  CognitoUser,
+  AuthenticationDetails,
+  CognitoUserAttribute
+} from 'amazon-cognito-identity-js';
+
+const poolData = {
+  UserPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID,
+  ClientId: import.meta.env.VITE_COGNITO_CLIENT_ID,
+};
+if (!poolData.UserPoolId || !poolData.ClientId) {
+  console.error('[AUTH] Missing Cognito environment variables:', poolData);
+}
+
+const userPool = new CognitoUserPool(poolData);
 
 function formatDateForCognito(date) {
-  const pad = (n) => String(n).padStart(2, "0");
-  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(
-    date.getUTCDate()
-  )} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(
-    date.getUTCSeconds()
-  )} UTC`;
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())} UTC`;
 }
 
 export const authHandler = {
   async register(email, password, attributes = {}) {
-    try {
-      return await signUp({
-        username: email,
-        password,
-        options: { userAttributes: attributes },
+    const attributeList = Object.entries(attributes).map(([key, value]) =>
+      new CognitoUserAttribute({ Name: key, Value: value })
+    );
+    return new Promise((resolve, reject) => {
+      userPool.signUp(email, password, attributeList, null, (err, result) => {
+        if (err) return reject(err);
+        resolve(result);
       });
-    } catch (err) {
-      console.error("Cognito signup error:", err);
-      throw new Error(`Registration failed: ${err.message || "Unknown error"}`);
-    }
+    });
   },
 
   async confirmSignUp(email, code) {
-    try {
-      return await confirmSignUp({
-        username: email,
-        confirmationCode: code,
+    const user = new CognitoUser({ Username: email, Pool: userPool });
+    return new Promise((resolve, reject) => {
+      user.confirmRegistration(code, true, (err, result) => {
+        if (err) return reject(err);
+        resolve(result);
       });
-    } catch (err) {
-      console.error("Cognito confirm signup error:", err);
-      throw new Error(`Confirmation failed: ${err.message || "Unknown error"}`);
-    }
+    });
   },
 
   async login(email, password) {
-    try {
-      await signIn({
-        username: email,
-        password,
-      });
-      const formattedDate = formatDateForCognito(new Date());
-      await updateUserAttributes({
-        userAttributes: {
-          "custom:lastlogin": formattedDate,
+    const user = new CognitoUser({ Username: email, Pool: userPool });
+    const authDetails = new AuthenticationDetails({ Username: email, Password: password });
+    return new Promise((resolve, reject) => {
+      user.authenticateUser(authDetails, {
+        onSuccess: (result) => {
+          const idToken = result.getIdToken().getJwtToken();
+          const accessToken = result.getAccessToken().getJwtToken();
+          const refreshToken = result.getRefreshToken().getToken();
+          const formattedDate = formatDateForCognito(new Date());
+
+          user.updateAttributes([
+            new CognitoUserAttribute({ Name: 'custom:lastlogin', Value: formattedDate })
+          ], (err) => {
+            if (err) console.error('[AUTH] Failed to update lastlogin:', err);
+            resolve({ idToken, accessToken, refreshToken });
+          });
         },
+        onFailure: reject
       });
-      return await fetchAuthSession();
-    } catch (err) {
-      console.error("Cognito login error:", err);
-      throw new Error(`Login failed: ${err.message || "Unknown error"}`);
-    }
+    });
   },
 
-  async logout() {
-    try {
-      await signOut();
-    } catch (err) {
-      console.error("Cognito logout error:", err);
-      throw new Error(`Logout failed: ${err.message || "Unknown error"}`);
-    }
+  logout() {
+    const user = userPool.getCurrentUser();
+    if (user) user.signOut();
+    localStorage.clear();
   },
 
   async changePassword(currentPassword, newPassword) {
-    try {
-      return await updatePassword({
-        oldPassword: currentPassword,
-        newPassword,
+    const user = userPool.getCurrentUser();
+    if (!user) return Promise.reject('Not authenticated');
+    return new Promise((resolve, reject) => {
+      user.getSession((err) => {
+        if (err) return reject(err);
+        user.changePassword(currentPassword, newPassword, (err, result) => {
+          if (err) return reject(err);
+          resolve(result);
+        });
       });
-    } catch (err) {
-      console.error("Cognito password change error:", err);
-      throw new Error(
-        `Password change failed: ${err.message || "Unknown error"}`
-      );
-    }
+    });
   },
 
   async forgotPassword(email) {
-    try {
-      return await resetPassword({
-        username: email,
-      });
-    } catch (err) {
-      console.error("Cognito forgot password error:", err);
-      throw new Error(
-        `Forgot password failed: ${err.message || "Unknown error"}`
-      );
-    }
+    const user = new CognitoUser({ Username: email, Pool: userPool });
+    return new Promise((resolve, reject) => {
+      user.forgotPassword({ onSuccess: resolve, onFailure: reject });
+    });
   },
 
   async confirmPassword(email, code, newPassword) {
-    try {
-      return await confirmResetPassword({
-        username: email,
-        confirmationCode: code,
-        newPassword,
+    const user = new CognitoUser({ Username: email, Pool: userPool });
+    return new Promise((resolve, reject) => {
+      user.confirmPassword(code, newPassword, {
+        onSuccess: resolve,
+        onFailure: reject,
       });
-    } catch (err) {
-      console.error("Cognito confirm password error:", err);
-      throw new Error(
-        `Password reset failed: ${err.message || "Unknown error"}`
-      );
-    }
+    });
   },
 
-  async updateProfileAttributes(attributes) {
-    try {
-      return await updateUserAttributes({
-        userAttributes: attributes,
+  updateProfileAttributes(attributes) {
+    const user = userPool.getCurrentUser();
+    if (!user) return Promise.reject('Not authenticated');
+
+    return new Promise((resolve, reject) => {
+      user.getSession((err, session) => {
+        if (err || !session.isValid()) return reject(err || 'Invalid session');
+
+        const attrList = Object.entries(attributes).map(
+          ([key, value]) => new CognitoUserAttribute({ Name: key, Value: value })
+        );
+
+        user.updateAttributes(attrList, (err, result) => {
+          if (err) return reject(err);
+          resolve(result);
+        });
       });
-    } catch (err) {
-      console.error("Cognito update attributes error:", err);
-      throw new Error(
-        `Attribute update failed: ${err.message || "Unknown error"}`
-      );
-    }
+    });
   },
 
   async restoreSession() {
-    try {
-      await getCurrentUser();
-      return await fetchAuthSession();
-    } catch (err) {
-      console.error("Cognito session restore error:", err);
-      throw new Error(
-        `Session restore failed: ${err.message || "Unknown error"}`
-      );
+    const user = userPool.getCurrentUser();
+    if (!user) {
+      console.log('[AUTH] No current user found');
+      return Promise.reject('No user');
     }
-  },
+
+    return new Promise((resolve, reject) => {
+      user.getSession((err, session) => {
+        if (err || !session.isValid()) {
+          console.log('[AUTH] Session invalid or error:', err);
+          return reject(err || 'Invalid session');
+        }
+
+        const idToken = session.getIdToken().getJwtToken();
+        const accessToken = session.getAccessToken().getJwtToken();
+        const refreshToken = session.getRefreshToken().getToken();
+        console.log('[AUTH] Session restored successfully');
+        resolve({ idToken, accessToken, refreshToken });
+      });
+    });
+  }
 };

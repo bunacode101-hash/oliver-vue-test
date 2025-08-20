@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { jwtDecode } from "jwt-decode";
 import { authHandler } from "@/services/authHandler";
 
 export const useAuthStore = defineStore("auth", {
@@ -10,10 +11,10 @@ export const useAuthStore = defineStore("auth", {
   }),
 
   actions: {
-    setFromSession(session) {
-      const tokens = session.tokens;
-      this.idToken = tokens.idToken.toString();
-      const decoded = tokens.idToken.payload;
+    setTokenAndDecode(idToken) {
+      this.idToken = idToken;
+      const decoded = jwtDecode(idToken);
+      console.log("[TOKEN] Full decoded token:", decoded); // Minimal addition for verification
       this.currentUser = {
         email: decoded.email,
         role: decoded["custom:role"],
@@ -22,6 +23,12 @@ export const useAuthStore = defineStore("auth", {
         awsDataCheck: decoded["custom:awsDataCheck"] === "true",
         raw: decoded,
       };
+      console.log("[TOKEN] Extracted attributes:", this.currentUser); // Minimal addition for verification
+    },
+
+    refreshFromStorage() {
+      const token = localStorage.getItem("idToken");
+      if (token) this.setTokenAndDecode(token);
     },
 
     simulateRole(role, overrides = {}) {
@@ -33,7 +40,7 @@ export const useAuthStore = defineStore("auth", {
     },
 
     logout() {
-      authHandler.logout();
+      authHandler.logout(); // Ensure handler logout is called
       localStorage.clear();
       this.$reset();
     },
@@ -46,8 +53,8 @@ export const useAuthStore = defineStore("auth", {
         const expiresIn = exp * 1000 - Date.now();
         if (expiresIn < 5 * 60 * 1000) {
           try {
-            const session = await authHandler.restoreSession();
-            this.setFromSession(session);
+            const { idToken } = await authHandler.restoreSession();
+            this.setTokenAndDecode(idToken);
           } catch (err) {
             this.logout();
           }
