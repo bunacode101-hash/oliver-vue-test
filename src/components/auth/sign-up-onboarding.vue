@@ -8,6 +8,7 @@
 </template>
 
 <script setup>
+import { ref } from "vue"; // Added: Import ref
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/useAuthStore";
 

@@ -3,7 +3,6 @@
     <h1>Sign Up</h1>
     <form @submit.prevent="handleSignUp">
       <input v-model="name" type="text" placeholder="Name" required />
-      <!-- Added: Required by Cognito -->
       <input v-model="email" type="email" placeholder="Email" required />
       <input
         v-model="password"
@@ -26,14 +25,16 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/useAuthStore";
 import { authHandler } from "@/services/authHandler";
 
-const name = ref(""); // Added: Required attribute
+const name = ref("");
 const email = ref("");
 const password = ref("");
 const role = ref("creator");
 const error = ref("");
 const router = useRouter();
+const authStore = useAuthStore();
 
 async function handleSignUp() {
   try {
@@ -42,9 +43,9 @@ async function handleSignUp() {
       role: role.value,
     });
     await authHandler.register(email.value, password.value, {
-      name: name.value, // Added: Required
+      email: email.value, // Added: Explicitly set email attribute
+      name: name.value,
       "custom:role": role.value,
-      "custom:kyc": "false", // Align with schema
     });
     console.log("Signup successful, redirecting to confirm-email");
     router.push("/confirm-email");

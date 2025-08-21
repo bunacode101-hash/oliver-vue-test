@@ -96,7 +96,7 @@
     "requiresAuth": true,
     "supportedRoles": ["any"],
     "redirectIfNotAuth": "/log-in",
-   
+    "redirect": "/dashboard/overview",
     "dependencies": {
       "roles": {
         "creator": {
