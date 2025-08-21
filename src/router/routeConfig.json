@@ -1,7 +1,7 @@
 [
   {
     "slug": "/",
-    "redirect": "/dashboard",
+    "redirect": "/log-in",
     "section": "auth",
     "preLoadSections": []
   },
@@ -114,6 +114,7 @@
     "requiresAuth": true,
     "supportedRoles": ["any"],
     "redirectIfNotAuth": "/log-in",
+    "componentPath": "@/components/dashboard/index.vue",
     "dependencies": {
       "roles": {
         "creator": {
@@ -188,6 +189,26 @@
       },
       "customer": {
         "componentPath": "@/components/dashboard/myMediaCustomer.vue"
+      }
+    }
+  },
+  {
+    "slug": "/dashboard/edit-profile",
+    "section": "dashboard",
+    "inheritConfigFromParent": true,
+    "customComponentPath": {
+      "creator": {
+        "componentPath": "@/components/dashboard/dashboardEditProfileCreator.vue"
+      }
+    }
+  },
+    {
+    "slug": "/dashboard/edit-settings",
+    "section": "dashboard",
+    "inheritConfigFromParent": true,
+    "customComponentPath": {
+      "creator": {
+        "componentPath": "@/components/dashboard/dashboardEditSettingsCreator.vue"
       }
     }
   },

@@ -12,3 +12,10 @@ import { useAuthStore } from "@/stores/useAuthStore";
 
 const auth = useAuthStore();
 </script>
+<script>
+export const assets = {
+  critical: ["/css/onboarding.css"],
+  high: [],
+  normal: ["/images/onboarding-bg.jpg"],
+};
+</script>

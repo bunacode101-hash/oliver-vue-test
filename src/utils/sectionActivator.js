@@ -41,10 +41,10 @@ export async function isSectionActivated(section) {
 
 export async function preloadAssets(urls, apply) {
   if (urls.length === 0) {
-    console.log(`[ASSETS] No assets to ${apply ? 'preload and apply' : 'prefetch'} (apply=${apply})`);
+    // console.log(`[ASSETS] No assets to ${apply ? 'preload and apply' : 'prefetch'} (apply=${apply})`);
     return;
   }
-  console.log(`[ASSETS] Starting limited ${apply ? 'preload' : 'prefetch'} for ${urls.length} assets (apply=${apply}, limit=5 per domain)`);
+  // console.log(`[ASSETS] Starting limited ${apply ? 'preload' : 'prefetch'} for ${urls.length} assets (apply=${apply}, limit=5 per domain)`);
   const groups = {};
   urls.forEach((url) => {
     const domain = getDomain(url);
@@ -53,7 +53,7 @@ export async function preloadAssets(urls, apply) {
   });
   const groupPromises = [];
   for (const domain in groups) {
-    console.log(`[DOMAIN] ${apply ? 'Preloading' : 'Prefetching'} ${groups[domain].length} assets for domain "${domain}": ${groups[domain].join(", ")}`);
+    // console.log(`[DOMAIN] ${apply ? 'Preloading' : 'Prefetching'} ${groups[domain].length} assets for domain "${domain}": ${groups[domain].join(", ")}`);
     groupPromises.push(limitConcurrency(groups[domain], (url) => preloadAsset(url, apply), 5));
   }
   await Promise.all(groupPromises);
@@ -66,10 +66,10 @@ export function preloadAsset(url, apply = false) {
     return Promise.resolve();
   }
   if (apply && appliedAssets.has(url)) {
-    console.log(`[Loader] Already loaded; skipping: ${url}`);
+    // console.log(`[Loader] Already loaded; skipping: ${url}`);
     return Promise.resolve();
   }
-  console.log(`[${apply ? 'PRELOAD' : 'PREFETCH'}] Initiating ${apply ? 'preload' : 'prefetch'} for ${url}`);
+  // console.log(`[${apply ? 'PRELOAD' : 'PREFETCH'}] Initiating ${apply ? 'preload' : 'prefetch'} for ${url}`);
   const ext = url.split(".").pop().toLowerCase();
   let preloadPromise = preloadedAssets.get(url);
   if (!preloadPromise) {
@@ -85,7 +85,7 @@ export function preloadAsset(url, apply = false) {
         link.as = "image";
       }
       link.onload = () => {
-        console.log(`[${apply ? 'PRELOAD' : 'PREFETCH'}] Completed ${apply ? 'preload' : 'prefetch'} for ${url}`);
+        // console.log(`[${apply ? 'PRELOAD' : 'PREFETCH'}] Completed ${apply ? 'preload' : 'prefetch'} for ${url}`);
         resolve();
       };
       link.onerror = reject;
@@ -100,7 +100,7 @@ export function preloadAsset(url, apply = false) {
   if (!apply) return preloadPromise;
   return preloadPromise
     .then(() => {
-      console.log(`[APPLY] Applying ${url}`);
+      // console.log(`[APPLY] Applying ${url}`);
       let applyPromise;
       if (ext === "css") {
         const style = document.createElement("link");
@@ -109,7 +109,7 @@ export function preloadAsset(url, apply = false) {
         document.head.appendChild(style);
         applyPromise = new Promise((res, rej) => {
           style.onload = () => {
-            console.log(`[APPLY] Completed apply for CSS ${url}`);
+            // console.log(`[APPLY] Completed apply for CSS ${url}`);
             res();
           };
           style.onerror = rej;
@@ -121,7 +121,7 @@ export function preloadAsset(url, apply = false) {
         document.head.appendChild(script);
         applyPromise = new Promise((res, rej) => {
           script.onload = () => {
-            console.log(`[APPLY] Completed apply for JS ${url}`);
+            // console.log(`[APPLY] Completed apply for JS ${url}`);
             res();
           };
           script.onerror = rej;
@@ -131,7 +131,7 @@ export function preloadAsset(url, apply = false) {
         img.src = url;
         applyPromise = new Promise((res, rej) => {
           img.onload = () => {
-            console.log(`[APPLY] Completed apply for image ${url}`);
+            // console.log(`[APPLY] Completed apply for image ${url}`);
             res();
           };
           img.onerror = rej;

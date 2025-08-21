@@ -2,27 +2,26 @@ import {
   CognitoUserPool,
   CognitoUser,
   AuthenticationDetails,
-  CognitoUserAttribute,
-} from "amazon-cognito-identity-js";
+  CognitoUserAttribute
+} from 'amazon-cognito-identity-js';
 
 const poolData = {
   UserPoolId: import.meta.env.VITE_COGNITO_USER_POOL_ID,
   ClientId: import.meta.env.VITE_COGNITO_CLIENT_ID,
 };
 if (!poolData.UserPoolId || !poolData.ClientId) {
-  console.error("[AUTH] Missing Cognito environment variables:", poolData);
+  console.error('[AUTH] Missing Cognito environment variables:', poolData);
 }
 
 const userPool = new CognitoUserPool(poolData);
 
-function formatDateForCognito(date) {
-  return date.toISOString(); // Outputs ISO 8601 format, e.g., "2025-08-21T13:48:00Z"
-}
+// Temporary storage for tokens to log after navigation
+let pendingTokens = null;
 
 export const authHandler = {
   async register(email, password, attributes = {}) {
-    const attributeList = Object.entries(attributes).map(
-      ([key, value]) => new CognitoUserAttribute({ Name: key, Value: value })
+    const attributeList = Object.entries(attributes).map(([key, value]) =>
+      new CognitoUserAttribute({ Name: key, Value: value })
     );
     return new Promise((resolve, reject) => {
       userPool.signUp(email, password, attributeList, null, (err, result) => {
@@ -44,48 +43,49 @@ export const authHandler = {
 
   async login(email, password) {
     const user = new CognitoUser({ Username: email, Pool: userPool });
-    const authDetails = new AuthenticationDetails({
-      Username: email,
-      Password: password,
-    });
+    const authDetails = new AuthenticationDetails({ Username: email, Password: password });
     return new Promise((resolve, reject) => {
       user.authenticateUser(authDetails, {
         onSuccess: (result) => {
           const idToken = result.getIdToken().getJwtToken();
           const accessToken = result.getAccessToken().getJwtToken();
           const refreshToken = result.getRefreshToken().getToken();
-          // Update lastlogin with ISO 8601 format
-          const formattedDate = formatDateForCognito(new Date());
-          user.updateAttributes(
-            [
-              new CognitoUserAttribute({
-                Name: "custom:lastlogin",
-                Value: formattedDate,
-              }),
-            ],
-            (err) => {
-              if (err) {
-                console.error("[AUTH] Failed to update lastlogin:", err);
-                // Proceed with login despite error
-              }
-              resolve({ idToken, accessToken, refreshToken });
+          // Store tokens for logging after navigation
+          pendingTokens = { idToken, accessToken, refreshToken };
+          // Update lastlogin with Unix timestamp as string (seconds since epoch)
+          const formattedDate = Math.floor(new Date().getTime() / 1000).toString();
+          user.updateAttributes([
+            new CognitoUserAttribute({ Name: 'custom:lastlogin', Value: formattedDate })
+          ], (err) => {
+            if (err) {
+              console.error('[AUTH] Failed to update lastlogin:', err);
+              // Proceed with login despite error
             }
-          );
+            resolve({ idToken, accessToken, refreshToken });
+          });
         },
-        onFailure: reject,
+        onFailure: reject
       });
     });
+  },
+
+  // Method to retrieve and clear pending tokens
+  getPendingTokens() {
+    const tokens = pendingTokens;
+    pendingTokens = null; // Clear after retrieval
+    return tokens;
   },
 
   logout() {
     const user = userPool.getCurrentUser();
     if (user) user.signOut();
     localStorage.clear();
+    pendingTokens = null;
   },
 
   async changePassword(currentPassword, newPassword) {
     const user = userPool.getCurrentUser();
-    if (!user) return Promise.reject("Not authenticated");
+    if (!user) return Promise.reject('Not authenticated');
     return new Promise((resolve, reject) => {
       user.getSession((err) => {
         if (err) return reject(err);
@@ -116,15 +116,14 @@ export const authHandler = {
 
   updateProfileAttributes(attributes) {
     const user = userPool.getCurrentUser();
-    if (!user) return Promise.reject("Not authenticated");
+    if (!user) return Promise.reject('Not authenticated');
 
     return new Promise((resolve, reject) => {
       user.getSession((err, session) => {
-        if (err || !session.isValid()) return reject(err || "Invalid session");
+        if (err || !session.isValid()) return reject(err || 'Invalid session');
 
         const attrList = Object.entries(attributes).map(
-          ([key, value]) =>
-            new CognitoUserAttribute({ Name: key, Value: value })
+          ([key, value]) => new CognitoUserAttribute({ Name: key, Value: value })
         );
 
         user.updateAttributes(attrList, (err, result) => {
@@ -138,23 +137,25 @@ export const authHandler = {
   async restoreSession() {
     const user = userPool.getCurrentUser();
     if (!user) {
-      console.log("[AUTH] No current user found");
-      return Promise.reject("No user");
+      console.log('[AUTH] No current user found');
+      return Promise.reject('No user');
     }
 
     return new Promise((resolve, reject) => {
       user.getSession((err, session) => {
         if (err || !session.isValid()) {
-          console.log("[AUTH] Session invalid or error:", err);
-          return reject(err || "Invalid session");
+          console.log('[AUTH] Session invalid or error:', err);
+          return reject(err || 'Invalid session');
         }
 
         const idToken = session.getIdToken().getJwtToken();
         const accessToken = session.getAccessToken().getJwtToken();
         const refreshToken = session.getRefreshToken().getToken();
-        console.log("[AUTH] Session restored successfully");
+        // Store tokens for logging after navigation
+        pendingTokens = { idToken, accessToken, refreshToken };
+        console.log('[AUTH] Session restored successfully');
         resolve({ idToken, accessToken, refreshToken });
       });
     });
-  },
+  }
 };

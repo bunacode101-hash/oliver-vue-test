@@ -28,3 +28,10 @@ async function completeKyc() {
   }
 }
 </script>
+<script>
+export const assets = {
+  critical: ["/css/onboarding.css"],
+  high: [],
+  normal: ["/images/kyc-bg.jpg"],
+};
+</script>

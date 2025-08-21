@@ -56,6 +56,10 @@ async function handleSignUp() {
 }
 </script>
 
-<style scoped>
-/* Your styles */
-</style>
+<script>
+export const assets = {
+  critical: ["/css/auth.css"],
+  high: [],
+  normal: ["/images/auth-bg.jpg"],
+};
+</script>

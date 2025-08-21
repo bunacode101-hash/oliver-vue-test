@@ -4,7 +4,7 @@
     <p>Welcome, {{ authStore.currentUser?.email }}!</p>
     <button @click="logout">Logout</button>
 
-    <!-- <nav style="margin-top: 1rem; display: flex; gap: 1rem">
+    <nav style="margin-top: 1rem; display: flex; gap: 1rem">
       <router-link to="/dashboard/edit-profile">
         <button
           style="
@@ -47,13 +47,12 @@
           My Media
         </button>
       </router-link>
-    </nav> -->
+    </nav>
   </div>
 </template>
 
 <script setup>
 import { useAuthStore } from "@/stores/useAuthStore";
-import { authHandler } from "@/services/authHandler";
 import { useRouter } from "vue-router";
 
 const authStore = useAuthStore();
@@ -63,8 +62,9 @@ function logout() {
   authStore.logout();
   router.push("/log-in");
 }
-
-const assets = {
+</script>
+<script>
+export const assets = {
   critical: ["/css/dashboard.css"],
   high: ["/js/vendor-charts.js"],
   normal: ["/images/image2.jpg"],

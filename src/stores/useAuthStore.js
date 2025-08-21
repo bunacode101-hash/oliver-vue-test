@@ -15,7 +15,7 @@ export const useAuthStore = defineStore("auth", {
     setTokenAndDecode(idToken) {
       this.idToken = idToken;
       const decoded = jwtDecode(idToken);
-      console.log("[TOKEN] Full decoded token:", decoded);
+      // console.log("[TOKEN] Full decoded token:", decoded);
       this.currentUser = {
         email: decoded.email,
         role: decoded["custom:role"],
@@ -23,7 +23,7 @@ export const useAuthStore = defineStore("auth", {
         onboardingPassed: this.onboardingPassed, // From local state
         raw: decoded,
       };
-      console.log("[TOKEN] Extracted attributes:", this.currentUser);
+      // console.log("[TOKEN] Extracted attributes:", this.currentUser);
     },
 
     refreshFromStorage() {

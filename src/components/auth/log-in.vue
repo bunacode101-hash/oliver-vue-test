@@ -34,14 +34,13 @@ async function handleLogin() {
       email.value,
       password.value
     );
-    console.log("[LOGIN] Token after login:", idToken);
+
     localStorage.setItem("idToken", idToken);
     localStorage.setItem("accessToken", accessToken);
     localStorage.setItem("refreshToken", refreshToken);
     auth.setTokenAndDecode(idToken);
     auth.startTokenRefreshLoop();
 
-    // Redirect based on user attributes (fetch from Pinia or token)
     if (!auth.currentUser.onboardingPassed) {
       router.push("/sign-up/onboarding");
     } else if (
@@ -57,4 +56,12 @@ async function handleLogin() {
     error.value = "Login failed: " + (err.message || "Unknown error");
   }
 }
+</script>
+
+<script>
+export const assets = {
+  critical: ["/css/auth.css"],
+  high: [],
+  normal: ["/images/auth-bg.jpg"],
+};
 </script>

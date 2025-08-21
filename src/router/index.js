@@ -25,11 +25,11 @@ function toRouteRecord(r) {
         return componentCache.get(cacheKey);
       }
       if (!r._cachedCompPath) {
-        console.log(
-          `[ROUTE] Resolving component for "${r.slug}" with role "${role}": ${
-            compPath || "NotFound"
-          }`
-        );
+        // console.log(
+        //   `[ROUTE] Resolving component for "${r.slug}" with role "${role}": ${
+        //     compPath || "NotFound"
+        //   }`
+        // );
         r._cachedCompPath = compPath || "@/components/NotFound.vue";
       }
       const component = compPath

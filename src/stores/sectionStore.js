@@ -13,6 +13,7 @@ export const useSectionsStore = defineStore("sections", {
       shop: false,
       misc: false,
     },
+    activating: {},
   }),
   actions: {
     hydrate() {
@@ -21,11 +22,11 @@ export const useSectionsStore = defineStore("sections", {
         const stored = localStorage.getItem(LS_KEY);
         if (stored) {
           this.activated = { ...this.activated, ...JSON.parse(stored) };
-          console.log(
-            `[HYDRATE] Restored activated sections: ${JSON.stringify(
-              this.activated
-            )}`
-          );
+          // console.log(
+          //   `[HYDRATE] Restored activated sections: ${JSON.stringify(
+          //     this.activated
+          //   )}`
+          // );
         } else {
           console.log(`[HYDRATE] No stored sections found`);
         }
@@ -71,6 +72,31 @@ export const useSectionsStore = defineStore("sections", {
         }`
       );
       return activated;
+    },
+    async activateSection(section, preloadFn) {
+      console.log(`[ACTIVATE] Attempting to activate "${section}"`);
+      if (this.isActivated(section)) {
+        console.log(`[ACTIVATE] "${section}" already activated`);
+        return;
+      }
+      if (this.activating[section]) {
+        console.log(`[ACTIVATE] Waiting for ongoing activation of "${section}"`);
+        await this.activating[section];
+        return;
+      }
+      console.log(`[ACTIVATE] Starting activation for "${section}"`);
+      const promise = preloadFn()
+        .then(() => {
+          this.markActivated(section);
+        })
+        .catch((err) => {
+          console.error(`[ACTIVATE] Error activating "${section}":`, err);
+        })
+        .finally(() => {
+          delete this.activating[section];
+        });
+      this.activating[section] = promise;
+      await promise;
     },
   },
 });

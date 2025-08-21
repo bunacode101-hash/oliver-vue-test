@@ -43,3 +43,10 @@ async function handleReset() {
   }
 }
 </script>
+<script>
+export const assets = {
+  critical: ["/css/auth.css"],
+  high: [],
+  normal: ["/images/auth-bg.jpg"],
+};
+</script>

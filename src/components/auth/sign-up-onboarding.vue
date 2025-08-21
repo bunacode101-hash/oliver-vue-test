@@ -29,3 +29,10 @@ function completeOnboarding() {
   }
 }
 </script>
+<script>
+export const assets = {
+  critical: ["/css/onboarding.css"],
+  high: [],
+  normal: ["/images/kyc-status-bg.jpg"],
+};
+</script>
