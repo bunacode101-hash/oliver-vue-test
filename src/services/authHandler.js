@@ -54,8 +54,7 @@ export const authHandler = {
           const idToken = result.getIdToken().getJwtToken();
           const accessToken = result.getAccessToken().getJwtToken();
           const refreshToken = result.getRefreshToken().getToken();
-
-          // Update lastlogin after resolving tokens
+          // Update lastlogin with ISO 8601 format
           const formattedDate = formatDateForCognito(new Date());
           user.updateAttributes(
             [
@@ -67,7 +66,7 @@ export const authHandler = {
             (err) => {
               if (err) {
                 console.error("[AUTH] Failed to update lastlogin:", err);
-                // Don't reject; proceed with login
+                // Proceed with login despite error
               }
               resolve({ idToken, accessToken, refreshToken });
             }
