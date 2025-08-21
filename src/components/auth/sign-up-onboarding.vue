@@ -1,26 +1,30 @@
-<script setup></script>
-
-<script>
-export const assets = {
-  critical: ["/css/onboarding.css"],
-  high: [],
-  normal: ["/images/onboarding-bg.jpg"],
-};
-</script>
-
 <template>
-  <section class="onboarding-section">
-    <h2>Onboarding</h2>
-    <p>Complete your onboarding process.</p>
-    <img
-      src="/images/onboarding-bg.jpg"
-      alt="Onboarding Background"
-      style="width: 100%; height: auto"
-    />
-  </section>
+  <div>
+    <h1>Onboarding</h1>
+    <p>Complete your onboarding here (placeholder form).</p>
+    <button @click="completeOnboarding">Complete Onboarding</button>
+    <p v-if="error">{{ error }}</p>
+  </div>
 </template>
 
-<style scoped>
-/* Ensure CSS is applied */
-@import "../../assets/css/onboarding.css";
-</style>
+<script setup>
+import { useRouter } from "vue-router";
+import { useAuthStore } from "@/stores/useAuthStore";
+
+const router = useRouter();
+const auth = useAuthStore();
+const error = ref("");
+
+function completeOnboarding() {
+  try {
+    auth.updateUserAttributesLocally({ onboardingPassed: true });
+    if (auth.currentUser.role === "creator") {
+      router.push("/sign-up/onboarding/kyc");
+    } else {
+      router.push("/dashboard");
+    }
+  } catch (err) {
+    error.value = "Failed to complete onboarding";
+  }
+}
+</script>

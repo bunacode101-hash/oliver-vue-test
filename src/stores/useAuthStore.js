@@ -7,6 +7,7 @@ export const useAuthStore = defineStore("auth", {
     idToken: null,
     currentUser: null,
     simulate: null,
+    onboardingPassed: false, // Local persisted state for onboarding
     _refreshInterval: null,
   }),
 
@@ -14,16 +15,15 @@ export const useAuthStore = defineStore("auth", {
     setTokenAndDecode(idToken) {
       this.idToken = idToken;
       const decoded = jwtDecode(idToken);
-      console.log("[TOKEN] Full decoded token:", decoded); // Minimal addition for verification
+      console.log("[TOKEN] Full decoded token:", decoded);
       this.currentUser = {
         email: decoded.email,
         role: decoded["custom:role"],
-        kycPassed: decoded["custom:kycPassed"] === "true",
-        onboardingPassed: decoded["custom:onboardingPassed"] === "true",
-        awsDataCheck: decoded["custom:awsDataCheck"] === "true",
+        kycPassed: decoded["custom:kyc"] === "true",
+        onboardingPassed: this.onboardingPassed, // From local state
         raw: decoded,
       };
-      console.log("[TOKEN] Extracted attributes:", this.currentUser); // Minimal addition for verification
+      console.log("[TOKEN] Extracted attributes:", this.currentUser);
     },
 
     refreshFromStorage() {
@@ -36,6 +36,9 @@ export const useAuthStore = defineStore("auth", {
     },
 
     updateUserAttributesLocally(updates) {
+      if (updates.onboardingPassed !== undefined) {
+        this.onboardingPassed = updates.onboardingPassed;
+      }
       this.currentUser = { ...this.currentUser, ...updates };
     },
 
